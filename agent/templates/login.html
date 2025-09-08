@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Login | Astrology AI{% endblock %}
+
+{% block content %}
+<div class="container">
+  
+          <h3 class="card-title text-center mb-4 shimmer">✨ Login to Account</h3>
+
+          <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="d-grid">
+              <button type="submit" class="btn btn-warning fw-bold">Login</button>
+            </div>
+          </form>
+
+          <p class="mt-3 text-center">
+            Don't have an account? <a href="{% url 'signup' %}" class="link-info">Signup</a>
+          </p>
+       
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Home | Astro AI{% endblock %}
+
+{% block content %}
+<style>
+  /* ✨ Twinkling card border */
+  .astro-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  .astro-card::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+      from 0deg,
+      #ffd700,
+      #ff69b4,
+      #00ffff,
+      #ffd700
+    );
+    animation: spin 6s linear infinite;
+    z-index: 0;
+  }
+
+  .astro-card::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 10px;
+    z-index: 1;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Inner content sits above glow */
+  .astro-card .card-body {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ✨ Shimmer text effect */
+  .shimmer {
+    background: linear-gradient(90deg, #fff, #fffa, #fff);
+    background-size: 200% 100%;
+    animation: shimmer 3s infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+</style>
+
+<!-- Hero Section -->
+<div class="text-center mb-5">
+  <h1 class="display-4 fw-bold text-warning shimmer">Welcome to Astro AI ✨</h1>
+  <p class="lead text-light">Your AI-powered guide for <span class="fw-semibold text-info">daily horoscopes, kundli insights, and compatibility checks</span>.</p>
+</div>
+
+<!-- Feature Cards -->
+<div class="row g-4">
+  {% if user.is_authenticated %}
+    <div class="col-md-4">
+      <div class="card astro-card shadow-lg h-100 text-center">
+        <div class="card-body text-white">
+          <h5 class="card-title fw-bold shimmer">🌞 Daily Horoscope</h5>
+          <p class="card-text">Personalized predictions for your day, based on your stars.</p>
+          <a href="{% url 'home' %}" class="btn btn-light btn-sm mt-2">Get Horoscope</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card astro-card shadow-lg h-100 text-center">
+        <div class="card-body text-white">
+          <h5 class="card-title fw-bold shimmer">📜 Kundli Report</h5>
+          <p class="card-text">Discover your birth chart and its hidden messages.</p>
+          <a href="{% url 'home' %}" class="btn btn-light btn-sm mt-2">View Report</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card astro-card shadow-lg h-100 text-center">
+        <div class="card-body text-white">
+          <h5 class="card-title fw-bold shimmer">💞 Compatibility</h5>
+          <p class="card-text">See how your stars align with someone special.</p>
+          <a href="{% url 'home' %}" class="btn btn-light btn-sm mt-2">Check Now</a>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12">
+      <div class="alert alert-info text-center shadow-sm">
+        Please <a href="{% url 'login' %}" class="alert-link">login</a> or 
+        <a href="{% url 'signup' %}" class="alert-link">singup</a> to access your readings.
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

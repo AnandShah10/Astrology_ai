@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Astrology AI{% endblock %}</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Starry background */
+    body {
+      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      color: #f8f9fa;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Star layers */
+    .stars, .stars2, .stars3 {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background: transparent;
+      z-index: 0;
+    }
+
+    .stars {
+      background: transparent url("https://www.script-tutorials.com/demos/360/images/stars.png") repeat top center;
+      animation: moveStars 200s linear infinite;
+    }
+
+    .stars2 {
+      background: transparent url("https://www.script-tutorials.com/demos/360/images/stars2.png") repeat top center;
+      animation: moveStars 400s linear infinite;
+    }
+
+    .stars3 {
+      background: transparent url("https://www.script-tutorials.com/demos/360/images/stars3.png") repeat top center;
+      animation: moveStars 600s linear infinite;
+    }
+
+    @keyframes moveStars {
+      from { background-position: 0 0; }
+      to { background-position: -10000px 5000px; }
+    }
+
+    /* Content should float above stars */
+    main, nav, footer {
+      position: relative;
+      z-index: 10;
+    }
+
+    footer {
+      background: rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+  <!-- Star layers -->
+  <div class="stars"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold fs-3" href="{% url 'home' %}">Astro AI ✨</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'save_profile' %}">Hi, {{ user.username }}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'chat' %}">Chat with AI</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'login' %}">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'signup' %}">Signup</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container py-5">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center text-white py-3 mt-5">
+    <small>🔮 Built with ❤️ for the stars</small>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

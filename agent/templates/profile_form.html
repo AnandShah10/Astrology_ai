@@ -1,0 +1,65 @@
+{% block title %}Astrology Profile {% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-lg border-0 astro-card">
+        <div class="card-body text-white">
+          <h3 class="card-title text-center mb-4 shimmer">🌌 Enter Your Birth Details</h3>
+
+          <form method="post" action="{% url 'save_profile' %}">
+            {% csrf_token %}
+            
+            <!-- Birth Date -->
+            <div class="mb-3">
+              <label for="birth_date" class="form-label">Birth Date</label>
+              <input type="date" id="birth_date" name="birth_date" class="form-control" required>
+            </div>
+
+            <!-- Birth Time -->
+            <div class="mb-3">
+              <label for="birth_time" class="form-label">Birth Time</label>
+              <input type="time" id="birth_time" name="birth_time" class="form-control" required>
+            </div>
+
+            <!-- Birth Place -->
+            <div class="mb-3">
+              <label for="birth_place" class="form-label">Birth Place</label>
+              <input type="text" id="birth_place" name="birth_place" class="form-control" placeholder="e.g., Mumbai, India" required>
+            </div>
+
+            <!-- Time Zone -->
+            <div class="mb-3">
+              <label for="birth_tz" class="form-label">Time Zone</label>
+              <select id="birth_tz" name="birth_tz" class="form-select" required>
+                <option value="Asia/Kolkata" selected>Asia/Kolkata (UTC+5:30)</option>
+                <option value="UTC">UTC</option>
+                <option value="America/New_York">America/New_York (UTC-5)</option>
+                <option value="Europe/London">Europe/London (UTC+0)</option>
+                <option value="Asia/Dubai">Asia/Dubai (UTC+4)</option>
+                <option value="Australia/Sydney">Australia/Sydney (UTC+10)</option>
+              </select>
+            </div>
+
+            <!-- System Choice -->
+            <div class="mb-3">
+              <label for="system" class="form-label">Preferred Astrology System</label>
+              <select id="system" name="system" class="form-select">
+                <option value="vedic" selected>Vedic Astrology</option>
+                <option value="western">Western Astrology</option>
+                <option value="chinese">Chinese Astrology</option>
+              </select>
+            </div>
+
+            <!-- Submit -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-warning fw-bold">✨ Save My Profile</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
