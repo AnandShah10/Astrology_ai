@@ -2,32 +2,66 @@
 {% block title %}Signup | Astrology AI{% endblock %}
 
 {% block content %}
-<div class="container">
-          <h3>✨ Create an Account</h3>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg p-4 p-md-5 rounded-4" style="max-width: 450px; width: 100%;">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold">✨ Create Your Account</h3>
+            <p class="text-muted">Join Astrology AI and explore your future</p>
+        </div>
 
-          <form method="post">
+        <form method="post" novalidate>
             {% csrf_token %}
-            {% comment %} {{ form.as_p }} {% endcomment %}
             {% for f in form %}
-            {% if f.label == 'terms' %}
-                {{ f }}
-                <label class="form-check-label" for="{{ f.id_for_label }}">
-                I agree to the <a href="{% url 'terms' %}" target="_blank">Terms & Conditions</a>
-                </label>
-                {% if form.terms.errors %}
-                <div class="text-danger small">{{ form.terms.errors }}</div>
-                {% endif %}
-            {% else %}
+    {% if f.label == 'terms' %}
+        <div class="form-check mb-3">
             {{ f }}
+            <label class="form-check-label" for="{{ f.id_for_label }}">
+                I agree to the <a href="{% url 'terms' %}" target="_blank">Terms & Conditions</a>
+            </label>
+            {% if form.terms.errors %}
+                <div class="text-danger small mt-1">{{ form.terms.errors }}</div>
             {% endif %}
-            {% endfor %}
-            <div class="d-grid">
-              <button type="submit" class="btn btn-warning fw-bold">Signup</button>
-            </div>
-          </form>
+        </div>
+    {% else %}
+        <div class="mb-3">
+            <label for="{{ f.id_for_label }}" class="form-label fw-semibold">{{ f.label }}</label>
+            {{ f }}
+            {% if f.errors %}
+                <div class="text-danger small mt-1">{{ f.errors }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endfor %}
 
-          <p class="mt-3 text-center">
-            Already have an account? <a href="{% url 'login' %}" class="link-info">Login</a>
-          </p>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-warning btn-lg fw-bold text-white" style="background: linear-gradient(90deg, #FFC107 0%, #FF8C00 100%);">
+                    Sign Up
+                </button>
+            </div>
+        </form>
+
+        <p class="mt-4 text-center text-muted">
+            Already have an account? <a href="{% url 'login' %}" class="text-warning fw-bold">Login</a>
+        </p>
+    </div>
 </div>
+
+<style>
+    input, select, textarea {
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        border-color: #FF8C00;
+        box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.25);
+    }
+
+    .card {
+        background: #ffffffcc;
+        backdrop-filter: blur(10px);
+    }
+</style>
 {% endblock %}

@@ -1,65 +1,137 @@
-{% block title %}Astrology Profile {% endblock %}
+{% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-      <div class="card shadow-lg border-0 astro-card">
-        <div class="card-body text-white">
-          <h3 class="card-title text-center mb-4 shimmer">🌌 Enter Your Birth Details</h3>
-
-          <form method="post" action="{% url 'save_profile' %}">
-            {% csrf_token %}
-            
-            <!-- Birth Date -->
-            <div class="mb-3">
-              <label for="birth_date" class="form-label">Birth Date</label>
-              <input type="date" id="birth_date" name="birth_date" class="form-control" required>
-            </div>
-
-            <!-- Birth Time -->
-            <div class="mb-3">
-              <label for="birth_time" class="form-label">Birth Time</label>
-              <input type="time" id="birth_time" name="birth_time" class="form-control" required>
-            </div>
-
-            <!-- Birth Place -->
-            <div class="mb-3">
-              <label for="birth_place" class="form-label">Birth Place</label>
-              <input type="text" id="birth_place" name="birth_place" class="form-control" placeholder="e.g., Mumbai, India" required>
-            </div>
-
-            <!-- Time Zone -->
-            {% comment %} <div class="mb-3">
-              <label for="birth_tz" class="form-label">Time Zone</label>
-              <select id="birth_tz" name="birth_tz" class="form-select" required>
-                <option value="Asia/Kolkata" selected>Asia/Kolkata (UTC+5:30)</option>
-                <option value="UTC">UTC</option>
-                <option value="America/New_York">America/New_York (UTC-5)</option>
-                <option value="Europe/London">Europe/London (UTC+0)</option>
-                <option value="Asia/Dubai">Asia/Dubai (UTC+4)</option>
-                <option value="Australia/Sydney">Australia/Sydney (UTC+10)</option>
-              </select>
-            </div> {% endcomment %}
-
-            <!-- System Choice -->
-            <div class="mb-3">
-              <label for="system" class="form-label">Preferred Astrology System</label>
-              <select id="system" name="system" class="form-select">
-                <option value="vedic" selected>Vedic Astrology</option>
-                <option value="western">Western Astrology</option>
-                <option value="chinese">Chinese Astrology</option>
-              </select>
-            </div>
-
-            <!-- Submit -->
-            <div class="d-grid">
-              <button type="submit" class="btn btn-warning fw-bold">✨ Save My Profile</button>
-            </div>
-          </form>
-        </div>
-      </div>
+<div class="profile-bg" style="height: 100vh; display: flex; justify-content: center; align-items: center; background: url('/static/images/cosmic-bg.jpg') no-repeat center/cover;">
+  <div class="astro-card p-4 p-md-5 rounded-4 shadow-lg text-center">
+    <div class="mb-4">
+      <h2 class="title">🌌 Enter Your Birth Details</h2>
+      <p class="subtitle">Unlock your astrology profile</p>
     </div>
+
+    <form method="post" action="{% url 'save_profile' %}" class="text-start">
+      {% csrf_token %}
+
+      <!-- Birth Date -->
+      <div class="form-group mb-3 position-relative">
+        <i class="bi bi-calendar-event"></i>
+        <input type="date" name="birth_date" placeholder="Birth Date" required>
+      </div>
+
+      <!-- Birth Time -->
+      <div class="form-group mb-3 position-relative">
+        <i class="bi bi-clock"></i>
+        <input type="time" name="birth_time" placeholder="Birth Time" required>
+      </div>
+
+      <!-- Birth Place -->
+      <div class="form-group mb-3 position-relative">
+        <i class="bi bi-geo-alt"></i>
+        <input type="text" name="birth_place" placeholder="Birth Place" required>
+      </div>
+
+      <!-- Astrology System -->
+      <div class="form-group mb-4">
+        <select name="system" required>
+          <option value="vedic" selected>Vedic Astrology</option>
+          <option value="western">Western Astrology</option>
+          <option value="chinese">Chinese Astrology</option>
+        </select>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="d-flex justify-content-center">
+        <button type="submit" class="btn-submit">✨ Save My Profile</button>
+      </div>
+    </form>
   </div>
 </div>
+
+<!-- Bootstrap Icons CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<style>
+/* Card */
+.astro-card {
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 450px;
+  color: #fff;
+  box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.astro-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 50px rgba(255, 193, 7, 0.7);
+}
+
+/* Title */
+.title {
+  font-size: 2rem;
+  background: linear-gradient(90deg, #FFC107, #FF8C00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+.subtitle {
+  font-size: 0.9rem;
+  color: #f0e68c;
+}
+
+/* Shimmer Animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Form Inputs */
+.form-group {
+  position: relative;
+}
+.form-group i {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #FFC107;
+  font-size: 1.2rem;
+}
+input[type="date"], input[type="time"], input[type="text"], select {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #555;
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  transition: all 0.3s ease;
+}
+input:focus, select:focus {
+  border-color: #FFC107;
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.5);
+  outline: none;
+}
+
+/* Button */
+.btn-submit {
+  background: linear-gradient(90deg, #FFC107, #FF8C00);
+  color: #fff;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+.btn-submit:hover {
+  transform: scale(1.05);
+  background: linear-gradient(90deg, #FF8C00, #FFC107);
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .title { font-size: 1.5rem; }
+  .astro-card { padding: 2rem; }
+}
+</style>
 {% endblock %}

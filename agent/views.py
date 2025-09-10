@@ -153,6 +153,7 @@ def compatibility(request):
 @login_required
 def edit_profile(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
+    print(profile)
     if request.method == "POST":
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
@@ -170,6 +171,7 @@ def edit_profile(request):
 
     else:
         form = UserProfileForm(instance=profile)
+        print(form)
         return render(request, "profile_form.html", {"form": form})
 
 """For signing up user"""
