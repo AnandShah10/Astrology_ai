@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Compatibility Report | Astro AI{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="card shadow-lg border-0">
+        <div class="card-body">
+          <h3 class="text-center mb-4">💞 Kundali Compatibility</h3>
+          
+          <!-- Compatibility Form -->
+          <form id="compatibility-form" class="row g-3">
+            
+            <h5 class="mt-3">Person 1</h5>
+            <div class="col-md-4">
+              <input type="text" name="name1" class="form-control" placeholder="Full Name" required>
+            </div>
+            <div class="col-md-4">
+              <input type="date" name="date1" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+              <input type="time" name="time1" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+              <input type="text" name="place1" class="form-control" placeholder="Place" required>
+            </div>
+
+            <h5 class="mt-4">Person 2</h5>
+            <div class="col-md-4">
+              <input type="text" name="name2" class="form-control" placeholder="Full Name" required>
+            </div>
+            <div class="col-md-4">
+              <input type="date" name="date2" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+              <input type="time" name="time2" class="form-control" required>
+            </div>
+            <div class="col-md-2">
+              <input type="text" name="place2" class="form-control" placeholder="Place" required>
+            </div>
+
+            <div class="col-12 text-center mt-4">
+              <button type="submit" class="btn btn-success px-5">Check Compatibility</button>
+            </div>
+          </form>
+
+          <!-- Result -->
+          <div id="compatibility-result" class="mt-5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById("compatibility-form").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const formData = new FormData(this);
+  const payload = Object.fromEntries(formData.entries());
+  console.log(payload,"--------------------------------------------------------------------------");
+  const person1 = {'Name':payload['name1'],'Date':payload['date1'],'Time':payload['time1'],'place':payload['place1']}
+  const person2 = {'Name':payload['name2'],'Date':payload['date2'],'Time':payload['time2'],'place':payload['place2']}
+  const response = await fetch("{% url 'compatibility' %}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": "{{ csrf_token }}",
+    },
+    body: JSON.stringify({person1,person2}),
+  });
+
+  const data = await response.json();
+
+  let html = `
+    <h4 class="text-center">Result</h4>
+    <p><strong>${data.person1.name}</strong> ❤️ <strong>${data.person2.name}</strong></p>
+    <p>Total Points: <strong>${data.total_points}/36</strong></p>
+    <ul class="list-group">
+  `;
+
+  data.gunas.forEach(g => {
+    html += `<li class="list-group-item d-flex justify-content-between">
+      <span>${g.name}</span>
+      <span>${g.points} / ${g.max_points}</span>
+    </li>`;
+  });
+
+  html += "</ul>";
+  document.getElementById("compatibility-result").innerHTML = html;
+});
+</script>
+{% endblock %}

@@ -10,9 +10,15 @@ from django.core.cache import cache
 from .models import UserProfile
 from google.generativeai import GenerativeModel, configure
 import json
+import base64
 from .forms import CustomSignupForm,UserProfileForm
 from geopy.geocoders import Nominatim
+from tzwhere import tzwhere
+from timezonefinderL import TimezoneFinder
+import pytz
 from datetime import date
+from .utils.kundali import kundali_report
+from .utils.compatibility import compatibility_report
 
 configure(api_key=settings.AI_API_KEY)
 MODEL = GenerativeModel("gemini-2.5-flash")
@@ -34,15 +40,25 @@ SYSTEM_PROMPT_TEMPLATE = (
     "Reply like a kind, insightful astrologer."
 )
 
-def geocode_place(place_name: str):
+def geocode_place_timezone(place_name: str):
     try:
         geolocator = Nominatim(user_agent="astro_ai_app",timeout=10)
         location = geolocator.geocode(place_name)
         if location:
-            return location.latitude, location.longitude
+            lat,lon = float(location.latitude),float(location.longitude)
+            print(".....",lat,lon)
+            # tzwhere_obj = tzwhere.tzwhere()
+            # timezone_str = tzwhere_obj.tzNameAt(lat, lon)
+            # print(timezone_str)
+            tf = TimezoneFinder()
+            timezone_str = tf.timezone_at(lng=77.2090, lat=28.6139)
+            print(timezone_str)  # Asia/Kolkata
+            if timezone_str:
+                tz = pytz.timezone(timezone_str)
+                return lat, lon, tz
     except Exception as e:
         print("Geocoding error:", e)
-        return None, None
+        return None, None,None
 
 @csrf_exempt
 @login_required
@@ -111,8 +127,29 @@ def terms(request):
     return render(request,'terms.html')
 
 def chat(request):
-    return render(request,'chat.html')
+    chat_history = request.session.get("chat_history", [])
+    # print(chat_history)
+    return render(request,'chat.html',{"chat_history":chat_history})
 
+def horoscope(request):
+    return render(request,'horoscope.html')
+
+def kundali(request):
+    data = kundali_report(request)
+    return render(request,'kundali_chart.html',data)
+
+def compatibility(request):
+    if request.method == 'POST':
+        print(request.body)
+        req = json.loads(request.body.decode('utf-8'))
+        print(req)
+        person1,person2 = req.get('person1'),req.get('person2')
+        print(person1,person2)
+        res=compatibility_report(person1,person2)
+        return render(request,'compatibility_form.html',res)
+        
+    else:
+        return render(request,'compatibility_form.html')
 @login_required
 def edit_profile(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
@@ -122,10 +159,12 @@ def edit_profile(request):
             profile = form.save(commit=False)
             # Geocode the place into lat/lng
             if profile.birth_place:
-                lat, lng = geocode_place(profile.birth_place)
+                lat, lng, tz = geocode_place_timezone(profile.birth_place)
+                print(lat,lng,tz)
                 if lat and lng:
                     profile.birth_lat = lat
                     profile.birth_lng = lng
+                    profile.birth_tz = tz
                 form.save()
             return redirect("home") # after saving, redirect to homepage
 

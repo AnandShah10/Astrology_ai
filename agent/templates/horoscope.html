@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Horoscope | Astro AI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-lg border-0 astro-card">
+        <div class="card-body">
+          <h3 class="text-center shimmer">🌌 Daily Horoscope</h3>
+
+          <!-- Zodiac Sign Selector -->
+          <div class="mb-3 text-center">
+            <label for="zodiac-select" class="form-label">Select Your Zodiac Sign:</label>
+            <select id="zodiac-select" class="form-select w-50 mx-auto">
+              <option value="" disabled selected>Choose...</option>
+              <option>Aries ♈</option>
+              <option>Taurus ♉</option>
+              <option>Gemini ♊</option>
+              <option>Cancer ♋</option>
+              <option>Leo ♌</option>
+              <option>Virgo ♍</option>
+              <option>Libra ♎</option>
+              <option>Scorpio ♏</option>
+              <option>Sagittarius ♐</option>
+              <option>Capricorn ♑</option>
+              <option>Aquarius ♒</option>
+              <option>Pisces ♓</option>
+            </select>
+          </div>
+
+          <!-- Horoscope Result -->
+          <div id="horoscope-box" class="p-3 bg-dark text-light rounded" style="min-height:150px;">
+            🔮 Select your sign to reveal today’s horoscope...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const zodiacSelect = document.getElementById("zodiac-select");
+  const horoscopeBox = document.getElementById("horoscope-box");
+
+  zodiacSelect.addEventListener("change", async function () {
+    const sign = zodiacSelect.value;
+    horoscopeBox.innerHTML = "⏳ Loading your horoscope...";
+
+    try {
+      const response = await fetch("{% url 'chat_api' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: JSON.stringify({ message: `Give me today's horoscope for ${sign}` }),
+      });
+
+      const data = await response.json();
+      let reply = data.reply
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>")
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+      horoscopeBox.innerHTML = reply;
+    } catch (err) {
+      horoscopeBox.innerHTML = "⚠️ Error fetching horoscope. Please try again.";
+    }
+  });
+});
+</script>
+{% endblock %}

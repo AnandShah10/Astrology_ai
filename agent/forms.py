@@ -6,12 +6,11 @@ from django.contrib.auth.models import User
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ["birth_date", "birth_time", "birth_place", "birth_tz", "system"]
+        fields = ["birth_date", "birth_time", "birth_place", "system"]
         widgets = {
             "birth_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "birth_time": forms.TimeInput(attrs={"type": "time", "class": "form-control"}),
             "birth_place": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., Mumbai, India"}),
-            "birth_tz": forms.Select(attrs={"class": "form-select"}),   # dropdown
             "system": forms.Select(attrs={"class": "form-select"}),    # dropdown
         }
 class CustomSignupForm(UserCreationForm):

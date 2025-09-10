@@ -10,4 +10,7 @@ urlpatterns = [
     path("api/", views.chat_api, name="chat_api"),
     path('chat',views.chat,name='chat'),
     path('terms',views.terms,name='terms'),
+    path('horoscope',views.horoscope,name='horoscope'),
+    path('kundali',views.kundali,name='kundali'),
+    path('compatibility',views.compatibility,name='compatibility'),
 ]
