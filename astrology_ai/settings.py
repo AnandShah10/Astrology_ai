@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-#qw8)eodbrwq1lynha*w!p%v(i-@qxggz5@!jb-%ea1e7_r$7d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['15.206.172.164']
+ALLOWED_HOSTS = ['15.206.172.164','astro-ai.jmstech.co', 'www.astro-ai.jmstech.co']
 
 
 # Application definition
