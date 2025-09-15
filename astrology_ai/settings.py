@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-#qw8)eodbrwq1lynha*w!p%v(i-@qxggz5@!jb-%ea1e7_r$7d'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['15.206.172.164','astro-ai.jmstech.co', 'www.astro-ai.jmstech.co']
+ALLOWED_HOSTS = ['15.206.172.164','astro-ai.jmstech.co', 'www.astro-ai.jmstech.co','localhost']
 
 
 # Application definition
@@ -122,7 +122,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL='/login/'
-AI_API_KEY='AIzaSyC85dYiv-nOX1E_DGlPmnFdwaXhzE-Ssts'
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',

@@ -11,16 +11,21 @@ from .models import UserProfile
 from google.generativeai import GenerativeModel, configure
 import json
 import base64
+import os
 from .forms import CustomSignupForm,UserProfileForm
 from geopy.geocoders import Nominatim
 from tzwhere import tzwhere
 from timezonefinderL import TimezoneFinder
 import pytz
+from dotenv import load_dotenv
 from datetime import date
-from .utils.kundali import kundali_report
-from .utils.compatibility import compatibility_report
+from .utils.kundali import kundali_generate
+from .utils.compatibility import compatibility_report,perform_kundali_matching
 
-configure(api_key=settings.AI_API_KEY)
+load_dotenv()
+
+AI_API_KEY = os.getenv('AI_API_KEY')
+configure(api_key=AI_API_KEY)
 MODEL = GenerativeModel("gemini-2.5-flash")
 SYSTEM_PROMPT_TEMPLATE = (
     "You are Astro AI, a specialized assistant dedicated exclusively to astrology. "
@@ -135,9 +140,17 @@ def horoscope(request):
     return render(request,'horoscope.html')
 
 def kundali(request):
-    data = kundali_report(request)
-    return render(request,'kundali_chart.html',data)
+    if request.method == 'POST':
+        data= request.body
+        data = json.loads(data.decode('utf-8'))
+        print(data)
+        result = kundali_generate(data)
+        print(result)
+        return render(request,'kundali_chart.html',result)
+    else:
+        return render(request,'kundali_chart.html')
 
+@csrf_exempt
 def compatibility(request):
     if request.method == 'POST':
         print(request.body)
@@ -145,11 +158,13 @@ def compatibility(request):
         print(req)
         person1,person2 = req.get('person1'),req.get('person2')
         print(person1,person2)
-        res=compatibility_report(person1,person2)
-        return render(request,'compatibility_form.html',res)
-        
+        # res=compatibility_report(person1,person2)
+        result = perform_kundali_matching(person1,person2)
+        print(result)
+        return JsonResponse(result)
     else:
         return render(request,'compatibility_form.html')
+
 @login_required
 def edit_profile(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)

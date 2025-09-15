@@ -44,6 +44,13 @@
               <button type="submit" class="btn btn-success px-5">Check Compatibility</button>
             </div>
           </form>
+          <!-- Loader -->
+            <div id="compatibility-loader" class="text-center my-4" style="display:none;">
+              <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2 text-dark">🔮 Calculating compatibility...</p>
+            </div>
 
           <!-- Result -->
           <div id="compatibility-result" class="mt-5"></div>
@@ -56,39 +63,125 @@
 <script>
 document.getElementById("compatibility-form").addEventListener("submit", async function(e) {
   e.preventDefault();
+  const loader = document.getElementById("compatibility-loader");
+  const resultBox = document.getElementById("compatibility-result");
+  resultBox.innerHTML = "";
+  loader.style.display = "block";
 
   const formData = new FormData(this);
   const payload = Object.fromEntries(formData.entries());
-  console.log(payload,"--------------------------------------------------------------------------");
-  const person1 = {'Name':payload['name1'],'Date':payload['date1'],'Time':payload['time1'],'place':payload['place1']}
-  const person2 = {'Name':payload['name2'],'Date':payload['date2'],'Time':payload['time2'],'place':payload['place2']}
-  const response = await fetch("{% url 'compatibility' %}", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": "{{ csrf_token }}",
-    },
-    body: JSON.stringify({person1,person2}),
-  });
 
-  const data = await response.json();
+  const person1 = {
+    "Name": payload["name1"],
+    "Date": payload["date1"],
+    "Time": payload["time1"],
+    "Place": payload["place1"]
+  };
+  const person2 = {
+    "Name": payload["name2"],
+    "Date": payload["date2"],
+    "Time": payload["time2"],
+    "Place": payload["place2"]
+  };
 
-  let html = `
-    <h4 class="text-center">Result</h4>
-    <p><strong>${data.person1.name}</strong> ❤️ <strong>${data.person2.name}</strong></p>
-    <p>Total Points: <strong>${data.total_points}/36</strong></p>
-    <ul class="list-group">
-  `;
+  try {
+    const response = await fetch("{% url 'compatibility' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: JSON.stringify({ person1, person2 }),
+    });
 
-  data.gunas.forEach(g => {
-    html += `<li class="list-group-item d-flex justify-content-between">
-      <span>${g.name}</span>
-      <span>${g.points} / ${g.max_points}</span>
-    </li>`;
-  });
+    const data = await response.json();
+    console.log(data)
+    // Build HTML
+    let html = `
+      <div class="card shadow border-0 bg-light mb-4">
+        <div class="card-body text-center">
+          <h4 class="mb-2">✨ Overall Compatibility</h4>
+          <h5 class="text-success">${data.match_status}</h5>
+          <div class="progress my-3" style="height: 25px;">
+            <div class="progress-bar bg-success fw-bold" role="progressbar"
+              style="width: ${data.total_score}%;"
+              aria-valuenow="${data.total_score}" aria-valuemin="0" aria-valuemax="100">
+              ${data.total_score}%
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
 
-  html += "</ul>";
-  document.getElementById("compatibility-result").innerHTML = html;
+    // 🟢 Koota Breakdown
+    html += `
+      <div class="card shadow border-0 mb-4">
+        <div class="card-body">
+          <h5 class="mb-3">📊 Koota Breakdown</h5>
+          <table class="table table-sm table-bordered">
+            <thead class="table-secondary">
+              <tr>
+                <th>Koota</th>
+                <th>Score</th>
+                <th>Max Score</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+    for (const [koota, val] of Object.entries(data.koota_breakdown)) {
+      html += `
+        <tr>
+          <td>${koota}</td>
+          <td>${val.score}</td>
+          <td>${val.max_score}</td>
+        </tr>
+      `;
+    }
+    html += `
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    // 🟢 Additional Predictions
+    html += `
+      <div class="card shadow border-0">
+        <div class="card-body">
+          <h5 class="mb-3">🔮 Additional Predictions</h5>
+          <ul class="list-group">
+    `;
+    data.additional_predictions.forEach(pred => {
+      let badgeClass = "secondary";
+      if (pred.Nature === "Good") badgeClass = "success";
+      else if (pred.Nature === "Bad") badgeClass = "danger";
+      else if (pred.Nature === "Neutral") badgeClass = "warning";
+      else if (pred.Nature === "Empty") badgeClass = "dark";
+
+      html += `
+        <li class="list-group-item d-flex justify-content-between align-items-start">
+          <div>
+            <strong>${pred.Name}</strong><br>
+            <small>${pred.Description}</small>
+          </div>
+          <span class="badge bg-${badgeClass} rounded-pill">${pred.Nature}</span>
+        </li>
+      `;
+    });
+    html += `
+          </ul>
+        </div>
+      </div>
+    `;
+
+    resultBox.innerHTML = html;
+
+  } catch (error) {
+    resultBox.innerHTML = `<div class="alert alert-danger">⚠️ Error: ${error.message}</div>`;
+  } finally {
+    loader.style.display = "none";
+  }
 });
 </script>
+
 {% endblock %}
