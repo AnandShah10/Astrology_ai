@@ -193,12 +193,15 @@ def edit_profile(request):
 def signup(request):
     if request.method == "POST":
         form = CustomSignupForm(request.POST)
-        print(form.is_valid)
+        print(form.is_valid())
         if form.is_valid():
             user = form.save()
             login(request,user)
             return redirect('save_profile')
-        else:return redirect('signup')
+        else:
+            # Debug: print form errors so you can see why signup fails
+            print("Form errors:", form.errors.as_json())
+            return render(request, 'signup.html', {"form": form})
     else:
         form = CustomSignupForm()
         return render(request,'signup.html',{"form":form})

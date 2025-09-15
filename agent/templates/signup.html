@@ -9,30 +9,29 @@
             <p class="text-muted">Join Astrology AI and explore your future</p>
         </div>
 
-        <form method="post" novalidate>
+        <form method="post" id="signup-form" novalidate>
             {% csrf_token %}
             {% for f in form %}
-    {% if f.label == 'terms' %}
-        <div class="form-check mb-3">
-            {{ f }}
-            <label class="form-check-label" for="{{ f.id_for_label }}">
-                I agree to the <a href="{% url 'terms' %}" target="_blank">Terms & Conditions</a>
-            </label>
-            {% if form.terms.errors %}
-                <div class="text-danger small mt-1">{{ form.terms.errors }}</div>
+            {% if 'Term'  in f.label %}
+                <div class="form-check mb-3">
+                    {{ f }}
+                    <label class="form-check-label" for="{{ f.id_for_label }}">
+                        I agree to the <a href="{% url 'terms' %}" target="_blank">Terms & Conditions</a>
+                    </label>
+                    <div class="invalid-feedback">You must accept the Terms & Conditions.</div>
+                </div>
+            {% else %}
+            <div class="mb-3">
+                <label for="{{ f.id_for_label }}" class="form-label fw-semibold">{{ f.label }}</label>
+                {{ f }}
+                <div class="invalid-feedback">Please enter a valid {{ f.label }}.</div>
+            </div>
             {% endif %}
-        </div>
-    {% else %}
-        <div class="mb-3">
-            <label for="{{ f.id_for_label }}" class="form-label fw-semibold">{{ f.label }}</label>
-            {{ f }}
-            {% if f.errors %}
-                <div class="text-danger small mt-1">{{ f.errors }}</div>
-            {% endif %}
-        </div>
-    {% endif %}
-{% endfor %}
+            {% endfor %}
 
+            {% for field,error in form.errors.items %}
+                <div class="invalid-feedback d-block">{{ error }}</div>
+            {% endfor %}
 
             <div class="d-grid">
                 <button type="submit" class="btn btn-warning btn-lg fw-bold text-white" style="background: linear-gradient(90deg, #FFC107 0%, #FF8C00 100%);">
@@ -64,4 +63,64 @@
         backdrop-filter: blur(10px);
     }
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("signup-form");
+
+    form.addEventListener("submit", function(event) {
+        let isValid = true;
+
+        // Validate username
+        const username = document.getElementById("id_username");
+        if (!username.value.trim() || username.value.length < 3) {
+            username.classList.add("is-invalid");
+            isValid = false;
+        } else {
+            username.classList.remove("is-invalid");
+        }
+
+        // Validate email
+        const email = document.getElementById("id_email");
+        const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+        if (!emailRegex.test(email.value.trim())) {
+            email.classList.add("is-invalid");
+            isValid = false;
+        } else {
+            email.classList.remove("is-invalid");
+        }
+
+        // Validate passwords
+        const pass1 = document.getElementById("id_password1");
+        const pass2 = document.getElementById("id_password2");
+        if (pass1.value.length < 8) {
+            pass1.classList.add("is-invalid");
+            isValid = false;
+        } else {
+            pass1.classList.remove("is-invalid");
+        }
+        if (pass1.value !== pass2.value || !pass2.value) {
+            pass2.classList.add("is-invalid");
+            isValid = false;
+        } else {
+            pass2.classList.remove("is-invalid");
+        }
+
+        // Validate terms
+        const terms = document.getElementById("id_terms");
+        if (!terms.checked) {
+            terms.classList.add("is-invalid");
+            isValid = false;
+        } else {
+            terms.classList.remove("is-invalid");
+        }
+
+        // Stop submission if invalid
+        if (!isValid) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    });
+});
+</script>
 {% endblock %}
