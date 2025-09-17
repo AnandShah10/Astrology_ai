@@ -174,7 +174,8 @@ def compatibility(request):
         return JsonResponse(data)
     else:
         return render(request,'compatibility_form.html')
-    
+
+@csrf_exempt    
 def kundali_matching(request):
     if request.method == 'POST':
         print(request.body)

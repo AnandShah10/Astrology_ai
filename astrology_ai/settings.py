@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-#qw8)eodbrwq1lynha*w!p%v(i-@qxggz5@!jb-%ea1e7_r$7d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['15.206.172.164','astro-ai.jmstech.co', 'www.astro-ai.jmstech.co','localhost']
+ALLOWED_HOSTS = ['15.206.172.164','astro-ai.jmstech.co', 'www.astro-ai.jmstech.co','localhost','127.0.0.1']
 
 
 # Application definition
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'agent',
 ]
 
@@ -128,4 +129,14 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'astrology-ai-cache',
     }
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }

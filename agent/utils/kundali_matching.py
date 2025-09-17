@@ -2,12 +2,10 @@
 # pip install pyswisseph geopy timezonefinder pytz
 
 import swisseph as swe
-from datetime import datetime, timedelta
+from datetime import datetime
 from geopy.geocoders import Nominatim
 from timezonefinderL import TimezoneFinder
 import pytz
-import itertools
-import math
 
 # -------------------------
 # Constants
@@ -141,6 +139,7 @@ NAK_TO_YONI = [
 def yoni_kuta_score(nak1_idx, nak2_idx):
     y1 = NAK_TO_YONI[nak1_idx]
     y2 = NAK_TO_YONI[nak2_idx]
+    print(y1,y2)
     return float(YONI_SCORE.get(y1, {}).get(y2, 0.0))
 
 # 3) Full Graha Maitri table (0..5)
@@ -219,21 +218,29 @@ def tara_kuta_score(nak1, nak2):
     return 0.0
 
 def gana_kuta_score(nak1, nak2):
-    GANA_OF_NAKSHATRA = [
-        "Deva","Manushya","Rakshasa","Manushya","Deva","Rakshasa","Deva","Deva","Rakshasa",
-        "Manushya","Manushya","Manushya","Deva","Rakshasa","Deva","Rakshasa","Deva","Rakshasa",
-        "Rakshasa","Rakshasa","Deva","Deva","Deva","Rakshasa","Manushya","Manushya","Deva"
-    ]
-    g1 = GANA_OF_NAKSHATRA[nak1]
-    g2 = GANA_OF_NAKSHATRA[nak2]
+    GANA_OF_NAKSHATRA = {
+        "Ashwini": "Deva", "Mrigashira": "Deva", "Punarvasu": "Deva",
+    "Pushya": "Deva", "Hasta": "Deva", "Swati": "Deva",
+    "Anuradha": "Deva", "Shravana": "Deva", "Revati": "Deva",
+
+    "Bharani": "Manushya", "Rohini": "Manushya", "Ardra": "Manushya",
+    "Uttara Phalguni": "Manushya", "Chitra": "Manushya",
+    "Uttarashadha": "Manushya", "Dhanishta": "Manushya",
+    "Purva Bhadrapada": "Manushya",
+
+    "Krittika": "Rakshasa", "Magha": "Rakshasa", "Purva Phalguni": "Rakshasa",
+    "Vishakha": "Rakshasa", "Jyeshta": "Rakshasa", "Mula": "Rakshasa",
+    "Purva Ashadha": "Rakshasa", "Shatabhisha": "Rakshasa"
+    }
+    g1 = GANA_OF_NAKSHATRA.get(nak1)
+    g2 = GANA_OF_NAKSHATRA.get(nak2)
     if g1 == g2:
         return 6.0
-    pair = (g1, g2)
-    if (pair == ("Deva","Manushya")) or (pair == ("Manushya","Deva")):
+    if (g1, g2) in [("Deva", "Manushya"), ("Manushya", "Deva")]:
         return 5.0
-    if (pair == ("Manushya","Rakshasa")) or (pair == ("Rakshasa","Manushya")):
+    if (g1, g2) in [("Deva", "Rakshasa"), ("Rakshasa", "Deva")]:
         return 1.0
-    if (pair == ("Deva","Rakshasa")) or (pair == ("Rakshasa","Deva")):
+    if (g1, g2) in [("Manushya", "Rakshasa"), ("Rakshasa", "Manushya")]:
         return 0.0
     return 2.0
 

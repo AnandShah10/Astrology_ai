@@ -1,74 +1,133 @@
 {% extends "base.html" %}
-{% block title %}Kundali Matcher{% endblock %}
-
 {% block content %}
-    <div class="container py-5">
-        <header class="text-center mb-5">
-            <h1 class="display-4 font-weight-bold">Kundali Matching</h1>
-            <p class="lead">Compare two birth charts for compatibility.</p>
-        </header>
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      
+      <!-- Card Wrapper -->
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-4">
+          <h2 class="text-center mb-4 text-primary fw-bold">🔮 Kundali Matching</h2>
+          <p class="text-muted text-center">Enter birth details for both persons to check compatibility.</p>
 
-        <div class="row justify-content-center">
-            <div class="col-md-10 col-lg-8">
-                <div class="card bg-secondary text-white border-0 shadow-lg">
-                    <div class="card-body p-4 p-md-5">
-                        <form id="matchingForm">
-                            <div class="row">
-                                <div class="col-md-6 mb-4">
-                                    <h4 class="text-center mb-3">Person 1</h4>
-                                    <div class="form-group">
-                                        <label for="p1Name">Name</label>
-                                        <input type="text" class="form-control form-control-sm" id="p1Name" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="p1Date">Date of Birth</label>
-                                        <input type="date" class="form-control form-control-sm" id="p1Date" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="p1Time">Time of Birth</label>
-                                        <input type="time" class="form-control form-control-sm" id="p1Time" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="p1Place">Place of Birth</label>
-                                        <input type="text" class="form-control form-control-sm" id="p1Place" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-4">
-                                    <h4 class="text-center mb-3">Person 2</h4>
-                                    <div class="form-group">
-                                        <label for="p2Name">Name</label>
-                                        <input type="text" class="form-control form-control-sm" id="p2Name" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="p2Date">Date of Birth</label>
-                                        <input type="date" class="form-control form-control-sm" id="p2Date" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="p2Time">Time of Birth</label>
-                                        <input type="time" class="form-control form-control-sm" id="p2Time" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="p2Place">Place of Birth</label>
-                                        <input type="text" class="form-control form-control-sm" id="p2Place" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="text-center mt-3">
-                                <button type="submit" class="btn btn-primary btn-lg">Match Kundalis</button>
-                            </div>
-                        </form>
-
-                        <div id="resultsContainer" class="mt-5 d-none">
-                            <div id="overallMatch" class="text-center mb-4"></div>
-                            <div id="summarySection"></div>
-                            <div id="ashtakootaSection" class="mt-4"></div>
-                            <div id="additionalSection" class="mt-4"></div>
-                            <div id="personDetails" class="mt-4"></div>
-                        </div>
-                    </div>
-                </div>
+          <!-- Form -->
+          <form id="kundaliForm" class="mt-4">
+            <div class="row g-3">
+              <h4 class="fw-semibold text-secondary">Person 1</h4>
+              <div class="col-md-6">
+                <input type="text" name="name1" placeholder="Full Name" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <input type="text" name="birth_place1" placeholder="Birth Place" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <input type="date" name="birth_date1" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <input type="time" name="birth_time1" class="form-control" required>
+              </div>
             </div>
+
+            <hr class="my-4">
+
+            <div class="row g-3">
+              <h4 class="fw-semibold text-secondary">Person 2</h4>
+              <div class="col-md-6">
+                <input type="text" name="name2" placeholder="Full Name" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <input type="text" name="birth_place2" placeholder="Birth Place" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <input type="date" name="birth_date2" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <input type="time" name="birth_time2" class="form-control" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-4 py-2 fs-5 rounded-pill">
+              Match Kundali
+            </button>
+          </form>
         </div>
+      </div>
+
+      <!-- Results -->
+      <div id="result" class="mt-5"></div>
+
     </div>
-    
+  </div>
+</div>
+
+<script>
+document.getElementById("kundaliForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const data = {
+        person1: {
+            Name: formData.get("name1"),
+            Date: formData.get("birth_date1"),
+            Time: formData.get("birth_time1"),
+            Place: formData.get("birth_place1"),
+        },
+        person2: {
+            Name: formData.get("name2"),
+            Date: formData.get("birth_date2"),
+            Time: formData.get("birth_time2"),
+            Place: formData.get("birth_place2"),
+        }
+    };
+
+    const response = await fetch("{% url 'kundali-match' %}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    });
+
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = `<div class="text-center mt-3"><div class="spinner-border text-primary"></div><p class="mt-2">Calculating...</p></div>`;
+
+    if (response.ok) {
+        const result = await response.json();
+        let breakdownHTML = "";
+        for (const [koota, details] of Object.entries(result.breakdown)) {
+            breakdownHTML += `
+              <div class="card shadow-sm border-0 mb-2">
+                <div class="card-body py-2 px-3">
+                  <strong>${koota}</strong>: ${details.score} / ${details.max}
+                </div>
+              </div>`;
+        }
+
+        let extraHTML = "";
+        if (result.additional_predictions) {
+            result.additional_predictions.forEach(pred => {
+
+                extraHTML += `
+                <div class="alert alert-${pred.Nature === "Warning" ? "danger" : "info"} mb-2">
+                  <strong>${pred.Name}</strong>: ${pred.Description}
+                </div>`;
+            });
+        }
+
+        resultDiv.innerHTML = `
+          <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-4">
+              <h3 class="text-center text-success fw-bold">✅ Match Status: ${result.match_status}</h3>
+              <p class="text-center fs-5"><strong>Total Score:</strong> ${result.total_score} / ${result.total_possible}</p>
+              <h5 class="mt-3">Koota Breakdown</h5>
+              ${breakdownHTML}
+              <h5 class="mt-4">Additional Predictions</h5>
+              ${extraHTML || "<p>No extra predictions</p>"}
+            </div>
+          </div>
+        `;
+    } else {
+        const error = await response.json();
+        resultDiv.innerHTML = `<div class="alert alert-danger">❌ Error: ${error.error}</div>`;
+    }
+});
+</script>
 {% endblock %}

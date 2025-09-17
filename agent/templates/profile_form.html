@@ -4,8 +4,7 @@
 <div class="profile-bg" style="height: 100vh; display: flex; justify-content: center; align-items: center; background: url('/static/images/cosmic-bg.jpg') no-repeat center/cover;">
   <div class="astro-card p-4 p-md-5 rounded-4 shadow-lg text-center">
     <div class="mb-4">
-      <h2 class="title">🌌 Enter Your Birth Details</h2>
-      <p class="subtitle">Unlock your astrology profile</p>
+      <h2 class="title"> Enter/Update Your Birth Details</h2>
     </div>
 
     <form method="post" action="{% url 'save_profile' %}" class="text-start">
@@ -14,28 +13,24 @@
       <!-- Birth Date -->
       <div class="form-group mb-3 position-relative">
         <i class="bi bi-calendar-event"></i>
-        <input type="date" name="birth_date" placeholder="Birth Date" required>
+        {{ form.birth_date }}
       </div>
 
       <!-- Birth Time -->
       <div class="form-group mb-3 position-relative">
         <i class="bi bi-clock"></i>
-        <input type="time" name="birth_time" placeholder="Birth Time" required>
+        {{ form.birth_time }}
       </div>
 
       <!-- Birth Place -->
       <div class="form-group mb-3 position-relative">
         <i class="bi bi-geo-alt"></i>
-        <input type="text" name="birth_place" placeholder="Birth Place" required>
+        {{ form.birth_place }}
       </div>
 
       <!-- Astrology System -->
-      <div class="form-group mb-4">
-        <select name="system" required>
-          <option value="vedic" selected>Vedic Astrology</option>
-          <option value="western">Western Astrology</option>
-          <option value="chinese">Chinese Astrology</option>
-        </select>
+      <div class="form-group mb-4 astro-sys">
+        {{ form.system }}
       </div>
 
       <!-- Submit Button -->
@@ -97,7 +92,7 @@
   color: #FFC107;
   font-size: 1.2rem;
 }
-input[type="date"], input[type="time"], input[type="text"], select {
+input[type="date"], input[type="time"], input[type="text"], .astro-sys {
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border-radius: 0.5rem;
@@ -106,7 +101,7 @@ input[type="date"], input[type="time"], input[type="text"], select {
   color: #fff;
   transition: all 0.3s ease;
 }
-input:focus, select:focus {
+input:focus, .astro-sys:focus {
   border-color: #FFC107;
   box-shadow: 0 0 15px rgba(255, 193, 7, 0.5);
   outline: none;

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Home | Astro AI{% endblock %}
+{% block title %}Home | Pathdarshak{% endblock %}
 
 {% block content %}
 <style>
@@ -65,7 +65,7 @@
 
 <!-- Hero Section -->
 <div class="text-center mb-5">
-  <h1 class="display-4 fw-bold text-warning shimmer">Welcome to Astro AI ✨</h1>
+  <h1 class="display-4 fw-bold text-warning shimmer">Welcome to Pathdarshak ✨</h1>
   <p class="lead text-light">Your AI-powered guide for <span class="fw-semibold text-info">daily horoscopes, kundli insights, and compatibility checks</span>.</p>
 </div>
 
@@ -86,7 +86,16 @@
         <div class="card-body text-white">
           <h5 class="card-title fw-bold shimmer">📜 Kundli Report</h5>
           <p class="card-text">Discover your birth chart and its hidden messages.</p>
-          <a href="{% url 'home' %}" class="btn btn-light btn-sm mt-2">View Report</a>
+          <a href="{% url 'kundali' %}" class="btn btn-light btn-sm mt-2">View Report</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card astro-card shadow-lg h-100 text-center">
+        <div class="card-body text-white">
+          <h5 class="card-title fw-bold shimmer">🤝 Kundli Matching</h5>
+          <p class="card-text"> Check Love Compatibility and Marriage Prediction.</p>
+          <a href="{% url 'kundali-match' %}" class="btn btn-light btn-sm mt-2">View Report</a>
         </div>
       </div>
     </div>
@@ -95,7 +104,16 @@
         <div class="card-body text-white">
           <h5 class="card-title fw-bold shimmer">💞 Compatibility</h5>
           <p class="card-text">See how your stars align with someone special.</p>
-          <a href="{% url 'home' %}" class="btn btn-light btn-sm mt-2">Check Now</a>
+          <a href="{% url 'compatibility' %}" class="btn btn-light btn-sm mt-2">Check Now</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card astro-card shadow-lg h-100 text-center">
+        <div class="card-body text-white">
+          <h5 class="card-title fw-bold shimmer">☯︎ Chinese zordic</h5>
+          <p class="card-text">Find your chinese zordic chart.</p>
+          <a href="{% url 'bazi' %}" class="btn btn-light btn-sm mt-2">Check Now</a>
         </div>
       </div>
     </div>
