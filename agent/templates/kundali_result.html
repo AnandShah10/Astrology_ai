@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Kundali Chart{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4 text-center">North-Indian Style Kundali</h2>
+
+  <!-- Ascendant -->
+  <div class="text-center mb-3">
+    <h5>Ascendant (Lagna): {{ ascendant|floatformat:2 }}°</h5>
+  </div>
+
+  <!-- Kundali Chart -->
+  <div class="text-center mb-4">
+    <img src="data:image/png;base64,{{ kundali_chart }}" class="img-fluid border rounded shadow">
+  </div>
+
+  <!-- Houses with Planets & Signs -->
+  <div class="row mt-4">
+    <h5 class="mb-3">Houses & Planets</h5>
+    {% for house, planets in house_planets.items %}
+  <div class="col-md-3 mb-3">
+    <div class="p-3 bg-dark text-light rounded-3 shadow-sm">
+      <h6 class="text-warning">House {{ house }} - {{ house_signs.house }}</h6>
+      {% if planets %}
+        <ul class="mb-0">
+          {% for pl in planets %}
+            <li>{{ pl }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="mb-0 text-muted">No planets</p>
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+
+  </div>
+
+  <div class="mt-4 text-center">
+    <a href="{% url 'kundali' %}" class="btn btn-secondary">🔄 Try Again</a>
+  </div>
+</div>
+{% endblock %}

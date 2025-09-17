@@ -18,9 +18,11 @@ from tzwhere import tzwhere
 from timezonefinderL import TimezoneFinder
 import pytz
 from dotenv import load_dotenv
-from datetime import date
-from .utils.kundali import kundali_generate
-from .utils.compatibility import compatibility_report,perform_kundali_matching
+from datetime import date,datetime
+from .utils.kundali import get_kundali_chart
+from .utils.compatibility import compatibility_report
+from .utils.kundali_matching import perform_kundali_matching
+from .utils.chinese_zodiac import generate_bazi
 
 load_dotenv()
 
@@ -140,15 +142,22 @@ def horoscope(request):
     return render(request,'horoscope.html')
 
 def kundali(request):
-    if request.method == 'POST':
-        data= request.body
-        data = json.loads(data.decode('utf-8'))
-        print(data)
-        result = kundali_generate(data)
+    if request.method == "POST":
+        year = int(request.POST.get("year"))
+        month = int(request.POST.get("month"))
+        day = int(request.POST.get("day"))
+        hour = int(request.POST.get("hour"))
+        minute = int(request.POST.get("minute"))
+        second = int(request.POST.get('second'))
+        place = str(request.POST.get('place'))
+        lat,lon,tz = geocode_place_timezone(place)
+        now = datetime.datetime.now(tz)
+        offset_tz = float(now.utcoffset().total_seconds() / 3600)
+        result = get_kundali_chart(year,month,day,hour,minute,lat,lon,offset_tz)
         print(result)
-        return render(request,'kundali_chart.html',result)
+        return render(request,'kundali_result.html',result)
     else:
-        return render(request,'kundali_chart.html')
+        return render(request,'kundali_form.html')
 
 @csrf_exempt
 def compatibility(request):
@@ -159,11 +168,43 @@ def compatibility(request):
         person1,person2 = req.get('person1'),req.get('person2')
         print(person1,person2)
         # res=compatibility_report(person1,person2)
+        result = compatibility_report(person1,person2)
+        print(result)
+        data = {"text":result}
+        return JsonResponse(data)
+    else:
+        return render(request,'compatibility_form.html')
+    
+def kundali_matching(request):
+    if request.method == 'POST':
+        print(request.body)
+        req = json.loads(request.body.decode('utf-8'))
+        print(req)
+        person1,person2 = req.get('person1'),req.get('person2')
+        print(person1,person2)
+        # res=compatibility_report(person1,person2)
         result = perform_kundali_matching(person1,person2)
         print(result)
         return JsonResponse(result)
+    return render(request,'kundali_matching_form.html')
+    
+def bazi_view(request):
+    if request.method == "POST":
+        year = int(request.POST.get("year"))
+        month = int(request.POST.get("month"))
+        day = int(request.POST.get("day"))
+        hour = int(request.POST.get("hour"))
+
+        bazi, chart, day_master, master_info,element_percentages = generate_bazi(year, month, day, hour)
+        return render(request, "bazi_result.html", {
+            "bazi": bazi,
+            "chart": chart,
+            "day_master": day_master,
+            "master_info": master_info,
+            "element_percentages":element_percentages,
+        })
     else:
-        return render(request,'compatibility_form.html')
+        return render(request, "bazi_form.html")
 
 @login_required
 def edit_profile(request):

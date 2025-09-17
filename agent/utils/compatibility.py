@@ -17,13 +17,13 @@ def compatibility_report(person1,person2):
     - Name: {person1['Name']}
     - Birth Date: {person1['Date']}
     - Birth Time: {person1['Time']}
-    - Birth Place: {person1['place']}
+    - Birth Place: {person1['Place']}
 
     Person B:
     -Name: {person2['Name']}
     - Birth Date: {person2['Date']}
     - Birth Time: {person2['Time']}
-    - Birth Place: {person2['place']}
+    - Birth Place: {person2['Place']}
 
     Provide a compatibility analysis in terms of:
     - Love & Relationship
@@ -50,18 +50,14 @@ def geocode_place_timezone(place_name: str):
         location = geolocator.geocode(place_name)
         if location:
             lat,lon = float(location.latitude),float(location.longitude)
-            print(".....",lat,lon)
             # tzwhere_obj = tzwhere.tzwhere()
             # timezone_str = tzwhere_obj.tzNameAt(lat, lon)
-            # print(timezone_str)
             tf = TimezoneFinder()
             timezone_str = tf.timezone_at(lng=77.2090, lat=28.6139)
-            print(timezone_str)  # Asia/Kolkata
             if timezone_str:
                 tz = pytz.timezone(timezone_str)
                 return lat, lon, tz
     except Exception as e:
-        print("Geocoding error:", e)
         return None, None,None
 
 from vedastro import *
@@ -90,12 +86,10 @@ def perform_kundali_matching(p1_birth_data, p2_birth_data):
         f"{p2_birth_data['Time']} {p2_birth_data['Date'].replace("-", "/")} {tz2}",
         GeoLocation(tz2, lat2, lon2)
     )
-    print(p1_time_obj,p2_time_obj)
     # Get the compatibility report
     match_report = Calculate.MatchReport(p1_time_obj, p2_time_obj)
 
     # Extracting the total score and individual Koota scores 
-    print(match_report)
 
     koota_names = ['Varna', 'Vashya', 'Tara', 'Yoni', 'Graha Maitri', 'Gana', 'Bhakoot', 'Nadi']
     max_scores = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]  # Standard Ashtakoota max scores
@@ -127,5 +121,4 @@ def perform_kundali_matching(p1_birth_data, p2_birth_data):
             'koota_breakdown': koota_breakdown,
             'additional_predictions': additional_predictions
         }
-    print('------------------------------------',result)
     return result

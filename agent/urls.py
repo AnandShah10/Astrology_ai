@@ -13,4 +13,5 @@ urlpatterns = [
     path('horoscope',views.horoscope,name='horoscope'),
     path('kundali',views.kundali,name='kundali'),
     path('compatibility',views.compatibility,name='compatibility'),
+    path('bazi',views.bazi_view,name='bazi'),
 ]

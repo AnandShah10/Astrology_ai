@@ -7,7 +7,7 @@
     <div class="col-md-10">
       <div class="card shadow-lg border-0">
         <div class="card-body">
-          <h3 class="text-center mb-4">💞 Kundali Compatibility</h3>
+          <h3 class="text-center mb-4">💞 Compatibility Test</h3>
           
           <!-- Compatibility Form -->
           <form id="compatibility-form" class="row g-3">
@@ -61,6 +61,116 @@
 </div>
 
 <script>
+  function formatCompatibility(text) {
+  let sections = {
+    love: "",
+    career: "",
+    emotional: "",
+    longterm: "",
+    score: "",
+  };
+
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  lines.forEach(line => {
+    const lower = line.toLowerCase();
+
+    if (lower.includes("### Love & Relationship")) sections.love += line + "\n";
+    else if (lower.includes("###Career/Partnership") || lower.includes("Career/Partnership") || lower.includes("partnership") || lower.includes("professional"))
+      sections.career += line + "\n";
+    else if (lower.includes("### Emotional Connection") || lower.includes("###Emotional Connection"))
+      sections.emotional += line + "\n";
+    else if (lower.includes("### Long-term Potential") || lower.includes("Long-term Potential") || lower.includes("future") || lower.includes("potential"))
+      sections.longterm += line + "\n";
+    else if (lower.includes("compatibility") || lower.includes("overall"))
+      sections.score += line + "\n";
+  });
+
+  // Extract numeric score
+  let scoreValue = 0;
+  const scoreMatch = sections.score.match(/(\d+)%/);
+  if (scoreMatch) scoreValue = parseInt(scoreMatch[1], 10);
+
+  // Dynamic progress bar color
+  let barClass = "bg-danger";
+  if (scoreValue >= 70) barClass = "bg-success";
+  else if (scoreValue >= 40) barClass = "bg-warning text-dark";
+
+  // Convert markdown-style bullets & bold to HTML
+  function formatText(t) {
+    if (!t) return "No details provided.";
+    return t
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // bold
+      .replace(/^\*\s(.*)/gm, "<li>$1</li>")            // bullets
+      .replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>")       // wrap bullets in <ul>
+      .replace(/\n/g, "<br>");                          // line breaks
+  }
+
+  // If parsing fails, fallback
+  const parsedSections = Object.values(sections).filter(s => s).length;
+  if (parsedSections <= 1) {
+    return `
+      <div class="card border-0 shadow bg-light">
+        <div class="card-body">
+          <h5 class="card-title">🔮 Compatibility Report</h5>
+          <div class="compatibility-text">${formatText(text)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="row">
+      <div class="col-12 mb-3">
+        <div class="card border-0 shadow bg-light">
+          <div class="card-body">
+            <h5 class="card-title">💞 Love & Relationship</h5>
+            <div class="compatibility-text">${formatText(sections.love)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 mb-3">
+        <div class="card border-0 shadow bg-light">
+          <div class="card-body">
+            <h5 class="card-title">💼 Career & Partnership</h5>
+            <div class="compatibility-text">${formatText(sections.career)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 mb-3">
+        <div class="card border-0 shadow bg-light">
+          <div class="card-body">
+            <h5 class="card-title">🌙 Emotional Connection</h5>
+            <div class="compatibility-text">${formatText(sections.emotional)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 mb-3">
+        <div class="card border-0 shadow bg-light">
+          <div class="card-body">
+            <h5 class="card-title">⏳ Long-term Potential</h5>
+            <div class="compatibility-text">${formatText(sections.longterm)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card border-0 shadow bg-warning">
+          <div class="card-body text-center">
+            <h4 class="card-title">✨ Overall Compatibility</h4>
+            <p class="fw-bold fs-5">${sections.score || "Score not found"}</p>
+            <div class="progress" style="height: 25px;">
+              <div class="progress-bar ${barClass} fw-bold" role="progressbar"
+                style="width: ${scoreValue}%;"
+                aria-valuenow="${scoreValue}" aria-valuemin="0" aria-valuemax="100">
+                ${scoreValue}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 document.getElementById("compatibility-form").addEventListener("submit", async function(e) {
   e.preventDefault();
   const loader = document.getElementById("compatibility-loader");
@@ -97,84 +207,9 @@ document.getElementById("compatibility-form").addEventListener("submit", async f
     const data = await response.json();
     console.log(data)
     // Build HTML
-    let html = `
-      <div class="card shadow border-0 bg-light mb-4">
-        <div class="card-body text-center">
-          <h4 class="mb-2">✨ Overall Compatibility</h4>
-          <h5 class="text-success">${data.match_status}</h5>
-          <div class="progress my-3" style="height: 25px;">
-            <div class="progress-bar bg-success fw-bold" role="progressbar"
-              style="width: ${data.total_score}%;"
-              aria-valuenow="${data.total_score}" aria-valuemin="0" aria-valuemax="100">
-              ${data.total_score}%
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    html = data['text']
 
-    // 🟢 Koota Breakdown
-    html += `
-      <div class="card shadow border-0 mb-4">
-        <div class="card-body">
-          <h5 class="mb-3">📊 Koota Breakdown</h5>
-          <table class="table table-sm table-bordered">
-            <thead class="table-secondary">
-              <tr>
-                <th>Koota</th>
-                <th>Score</th>
-                <th>Max Score</th>
-              </tr>
-            </thead>
-            <tbody>
-    `;
-    for (const [koota, val] of Object.entries(data.koota_breakdown)) {
-      html += `
-        <tr>
-          <td>${koota}</td>
-          <td>${val.score}</td>
-          <td>${val.max_score}</td>
-        </tr>
-      `;
-    }
-    html += `
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-
-    // 🟢 Additional Predictions
-    html += `
-      <div class="card shadow border-0">
-        <div class="card-body">
-          <h5 class="mb-3">🔮 Additional Predictions</h5>
-          <ul class="list-group">
-    `;
-    data.additional_predictions.forEach(pred => {
-      let badgeClass = "secondary";
-      if (pred.Nature === "Good") badgeClass = "success";
-      else if (pred.Nature === "Bad") badgeClass = "danger";
-      else if (pred.Nature === "Neutral") badgeClass = "warning";
-      else if (pred.Nature === "Empty") badgeClass = "dark";
-
-      html += `
-        <li class="list-group-item d-flex justify-content-between align-items-start">
-          <div>
-            <strong>${pred.Name}</strong><br>
-            <small>${pred.Description}</small>
-          </div>
-          <span class="badge bg-${badgeClass} rounded-pill">${pred.Nature}</span>
-        </li>
-      `;
-    });
-    html += `
-          </ul>
-        </div>
-      </div>
-    `;
-
-    resultBox.innerHTML = html;
+    resultBox.innerHTML = formatCompatibility(html);
 
   } catch (error) {
     resultBox.innerHTML = `<div class="alert alert-danger">⚠️ Error: ${error.message}</div>`;
