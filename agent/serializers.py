@@ -13,3 +13,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['user', 'birth_date', 'birth_time', 'birth_place', 'birth_lat', 'birth_lng', 'birth_tz', 'system']
+
+class TimeRangeSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    time = serializers.CharField()
+
+class PanchangSerializer(serializers.Serializer):
+    tithi = serializers.CharField()
+    nakshatra = serializers.CharField()
+    yoga = serializers.CharField()
+    karana = serializers.CharField()
+    weekday = serializers.CharField()
+    sunrise = serializers.CharField()
+    sunset = serializers.CharField()
+    rahu_kaal = serializers.CharField()
+    gulika_kaal = serializers.CharField()
+    yamaganda = serializers.CharField()
+    abhijit_muhurta = serializers.CharField()
+    choghadiya_day = TimeRangeSerializer(many=True)
+    choghadiya_night = TimeRangeSerializer(many=True)

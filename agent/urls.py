@@ -15,4 +15,6 @@ urlpatterns = [
     path('kundali_match',views.kundali_matching,name='kundali-match'),
     path('compatibility',views.compatibility,name='compatibility'),
     path('bazi',views.bazi_view,name='bazi'),
+    path('panchang',views.panchang_view,name='panchang'),
+
 ]

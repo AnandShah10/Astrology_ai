@@ -6,7 +6,7 @@ from rest_framework import generics, status
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
 from .models import UserProfile
-from .serializers import UserProfileSerializer, UserSerializer
+from .serializers import UserProfileSerializer, UserSerializer, TimeRangeSerializer,PanchangSerializer
 from datetime import date
 import os
 from google.generativeai import GenerativeModel, configure
@@ -16,7 +16,7 @@ from .utils.compatibility import compatibility_report
 from .utils.kundali_matching import perform_kundali_matching
 from .utils.chinese_zodiac import generate_bazi
 from .views import geocode_place_timezone
-
+from .utils.panchang import get_panchang
 SYSTEM_PROMPT_TEMPLATE = (
     "You are Astro AI, a specialized assistant dedicated exclusively to astrology. "
     "Your role is to provide accurate, insightful, and engaging answers about horoscopes, "
@@ -75,6 +75,27 @@ def chat_api(request):
 
     return Response({"reply": reply})
 
+# ==================== Panchang API ====================
+
+@api_view(["GET"])
+@permission_classes([AllowAny])  # you can change to [IsAuthenticated] if login required
+def panchang_api(request):
+    try:
+        # Parameters from query string
+        year = int(request.GET.get("year", date.today().year))
+        month = int(request.GET.get("month", date.today().month))
+        day = int(request.GET.get("day", date.today().day))
+        lat = float(request.GET.get("lat", 28.6139))   # default Delhi
+        lon = float(request.GET.get("lon", 77.2090))
+        tz = float(request.GET.get("tz", 5.5))        # default IST
+
+        result = get_panchang(year, month, day, lat, lon, tz)
+
+        serializer = PanchangSerializer(result)
+        return Response(serializer.data)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=400)
 
 # ==================== Compatibility API ====================
 @api_view(['POST'])

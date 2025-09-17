@@ -23,7 +23,7 @@ from .utils.kundali import get_kundali_chart
 from .utils.compatibility import compatibility_report
 from .utils.kundali_matching import perform_kundali_matching
 from .utils.chinese_zodiac import generate_bazi
-
+from .utils.panchang import get_panchang
 load_dotenv()
 
 AI_API_KEY = os.getenv('AI_API_KEY')
@@ -141,6 +141,24 @@ def chat(request):
 def horoscope(request):
     return render(request,'horoscope.html')
 
+def panchang_view(request):
+    result = None
+    if request.method == "POST":
+        date_str = request.POST.get("date")
+        time_str = request.POST.get("time", "12:00")
+        place = str(request.POST.get('place'))
+        lat,lon,tz = geocode_place_timezone(place)
+        now = datetime.now(tz)
+        offset_tz = float(now.utcoffset().total_seconds() / 3600)
+
+        y, m, d = map(int, date_str.split("-"))
+        h, mi = map(int, time_str.split(":"))
+
+        result = get_panchang(y, m, d, h, mi, lat, lon, offset_tz)
+
+    return render(request, "panchang.html", {"result": result})
+
+
 def kundali(request):
     if request.method == "POST":
         year = int(request.POST.get("year"))
@@ -151,7 +169,7 @@ def kundali(request):
         second = int(request.POST.get('second'))
         place = str(request.POST.get('place'))
         lat,lon,tz = geocode_place_timezone(place)
-        now = datetime.datetime.now(tz)
+        now = datetime.now(tz)
         offset_tz = float(now.utcoffset().total_seconds() / 3600)
         result = get_kundali_chart(year,month,day,hour,minute,lat,lon,offset_tz)
         print(result)
