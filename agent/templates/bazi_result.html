@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Chat | Astro AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4 text-center">Your BaZi (Four Pillars)</h2>
+
+  <!-- Pillars -->
+  <div class="row g-4">
+    {% for name, details in bazi.items %}
+    <div class="col-md-3">
+      <div class="p-3 bg-dark text-light rounded-4 shadow-sm">
+        <h6 class="fw-bold text-warning">{{ name }}</h6>
+        <p class="fs-6 mb-1">{{ details.text }}</p>
+        <hr class="border-light">
+        <p><strong>Element:</strong> {{ details.element }}</p>
+        <p><strong>Ten God:</strong> <span class="badge bg-info text-dark">{{ details.ten_god }}</span></p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Element Balance -->
+  <div class="mt-5 text-center">
+    <h4>⚖️ Element Balance</h4>
+    <img src="data:image/png;base64,{{ chart }}" class="img-fluid rounded shadow mb-3">
+
+    <!-- Legend with percentages -->
+    <div class="row justify-content-center">
+      {% for element, info in element_percentages.items %}
+      <div class="col-md-2 col-6 mb-2">
+        <div class="d-flex align-items-center justify-content-center">
+          <span class="me-2 rounded-circle d-inline-block"
+                style="width:16px;height:16px;background-color:{{ info.color }}"></span>
+          <span>{{ element }} ({{ info.percent }}%)</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Day Master -->
+  <div class="mt-5 text-center">
+    <h4 class="fw-bold">🌟 Your Day Master</h4>
+    <div class="p-4 bg-dark text-light shadow rounded-4 mx-auto" style="max-width: 600px;">
+      <h5 class="text-info">{{ day_master }} ({{ master_info.element }})</h5>
+      <p class="mb-2"><strong>Traits:</strong> {{ master_info.traits }}</p>
+      <p class="mb-1"><strong>Favorable Elements:</strong> {{ master_info.favorable }}</p>
+      <p><strong>Unfavorable Elements:</strong> {{ master_info.unfavorable }}</p>
+    </div>
+  </div>
+
+  <!-- Try Again Button -->
+  <div class="mt-4 text-center">
+    <a href="{% url 'bazi' %}" class="btn btn-secondary">🔄 Try Again</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Chat | Astro AI{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    <h2 class="mb-4 text-center">BaZi (Four Pillars) Calculator</h2>
+    <form method="post" class="p-4 bg-white rounded-3 shadow-sm">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-3"><input type="number" name="year" class="form-control" placeholder="Year" required></div>
+        <div class="col-md-3"><input type="number" name="month" class="form-control" placeholder="Month" required></div>
+        <div class="col-md-3"><input type="number" name="day" class="form-control" placeholder="Day" required></div>
+        <div class="col-md-3"><input type="number" name="hour" class="form-control" placeholder="Hour (0-23)" required></div>
+      </div>
+      <button class="btn btn-primary mt-4 w-100">Generate BaZi Chart</button>
+    </form>
+  </div>
+{% endblock %}
+

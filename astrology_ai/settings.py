@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'agent',
 ]
 
@@ -127,5 +128,14 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'astrology-ai-cache',
+    }
+}
+
+ASGI_APPLICATION = 'astrology_ai.asgi.application'
+
+# For simplicity, in-memory channel layer
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }

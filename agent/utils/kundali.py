@@ -1,132 +1,88 @@
-from vedastro import *
-from geopy.geocoders import Nominatim
-from timezonefinderL import TimezoneFinder
-import pytz
-def geocode_place_timezone(place_name: str):
-    try:
-        geolocator = Nominatim(user_agent="astro_ai_app",timeout=10)
-        location = geolocator.geocode(place_name)
-        if location:
-            lat,lon = float(location.latitude),float(location.longitude)
-            print(".....",lat,lon)
-            # tzwhere_obj = tzwhere.tzwhere()
-            # timezone_str = tzwhere_obj.tzNameAt(lat, lon)
-            # print(timezone_str)
-            tf = TimezoneFinder()
-            timezone_str = tf.timezone_at(lng=77.2090, lat=28.6139)
-            print(timezone_str)  # Asia/Kolkata
-            if timezone_str:
-                tz = pytz.timezone(timezone_str)
-                return lat, lon, tz
-    except Exception as e:
-        print("Geocoding error:", e)
-        return None, None,None
-    
-def kundali_generate(data):
-    try:
-        # Step 1: Validate input data
-        required_keys = ['Date', 'Time', 'place']
-        if not all(key in data for key in required_keys):
-            raise ValueError(f"Missing required keys in birth data: {required_keys}")
+import swisseph as swe
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+import io, base64
 
-        # Step 2: Geocode place and get timezone
-        lat, lon, tz = geocode_place_timezone(data['place'])
+SIGNS = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo",
+         "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"]
+PLANETS = ["Sun","Moon","Mars","Mercury","Jupiter","Venus","Saturn","Rahu","Ketu"]
 
-        # Step 3: Format time string
-        date = data['Date'].replace("-", "/")
-        time_str = f"{data['Time']} {date} {tz}"
+def get_kundali_chart(year, month, day, hour, minute, lat, lon, tz_offset):
+    # Convert local time to UTC
+    dt = datetime(year, month, day, hour, minute)
+    dt_utc = dt - timedelta(hours=tz_offset)
+    jd = swe.julday(dt_utc.year, dt_utc.month, dt_utc.day, dt_utc.hour + dt_utc.minute/60)
 
-        # Step 4: Create GeoLocation and Time objects
-        geolocation = GeoLocation(data['place'], lon, lat)
-        time_obj = Time(time_str, geolocation)
-        print("Time Object:", time_obj)  # Debug
+    # Houses (Placidus)
+    asc, cusps = swe.houses(jd, lat, lon, b'A')
+    asc_deg = asc[0]
 
-        # Step 5: Calculate Kundali components
-        # Planets (Navagraha)
-        planets = [PlanetName.Sun, PlanetName.Moon, PlanetName.Mars, PlanetName.Mercury, 
-                   PlanetName.Jupiter, PlanetName.Venus, PlanetName.Saturn, PlanetName.Rahu, 
-                   PlanetName.Ketu]
-        planet_data = {}
-        for planet in planets:
-            data = Calculate.AllPlanetData(planet, time_obj)
-            planet_data[str(planet)] = {
-                'longitude': float(data.get('Longitude', 0.0)),
-                'sign': str(data.get('Sign', 'Unknown')),
-                'shadbala': float(data.get('Shadbala', 0.0)),
-                'is_retrograde': bool(data.get('IsRetrograde', False))
-            }
+    # Determine Ascendant sign
+    asc_sign_index = int(asc_deg // 30)
 
-        # Houses (1-12)
-        house_data = {}
-        for house_num in range(1, 13):
-            house = HouseName[f"House{house_num}"]
-            data = Calculate.AllHouseData(house, time_obj)
-            house_data[f"House{house_num}"] = {
-                'sign': str(data.get('Sign', 'Unknown')),
-                'lord': str(data.get('Lord', 'Unknown'))
-            }
+    # Planet positions
+    planet_positions = {}
+    for pl in PLANETS:
+        if pl == "Rahu":
+            deg = swe.calc_ut(jd, swe.MEAN_NODE)[0][0]
+        elif pl == "Ketu":
+            deg = (swe.calc_ut(jd, swe.MEAN_NODE)[0][0] + 180) % 360
+        else:
+            deg = swe.calc_ut(jd, getattr(swe, pl.upper()))[0][0]
+        sign_index = int(deg // 30)
+        planet_positions[pl] = {"deg": deg, "sign": SIGNS[sign_index]}
 
-        # Zodiac Signs
-        signs = [ZodiacName.Aries, ZodiacName.Taurus, ZodiacName.Gemini, ZodiacName.Cancer, 
-                 ZodiacName.Leo, ZodiacName.Virgo, ZodiacName.Libra, ZodiacName.Scorpio, 
-                 ZodiacName.Sagittarius, ZodiacName.Capricorn, ZodiacName.Aquarius, ZodiacName.Pisces]
-        zodiac_data = {}
-        for sign in signs:
-            data = Calculate.AllZodiacSignData(sign, time_obj)
-            zodiac_data[str(sign)] = {
-                'ruling_planet': str(data.get('RulingPlanet', 'Unknown')),
-                'element': str(data.get('Element', 'Unknown'))
-            }
+    # Assign planets to houses based on Ascendant
+    house_planets = {i+1: [] for i in range(12)}
+    for pl, info in planet_positions.items():
+        deg = info["deg"]
+        house_num = int(((deg - asc_deg + 360) % 360) // 30) + 1
+        if house_num > 12:
+            house_num -= 12
+        house_planets[house_num].append(pl)
 
-        # Step 6: Summarize result
-        result = {
-            'name': data.get('Name', 'Unknown'),
-            'birth_time': time_str,
-            'place': data['place'],
-            'planet_data': planet_data,
-            'house_data': house_data,
-            'zodiac_data': zodiac_data
-        }
+    # Correct zodiac signs in houses
+    house_signs = {}
+    for i in range(12):
+        house_index = (asc_sign_index + i) % 12
+        house_signs[i+1] = SIGNS[house_index]
 
-        return result
+    # Coordinates for North-Indian style diamond chart
+    diamond_houses = {
+        1: (2, 0), 2: (0, 2), 3: (2, 4), 4: (4, 2),
+        5: (0, 4), 6: (4, 0), 7: (2, -2), 8: (-2, 2),
+        9: (2, 6), 10: (6, 2), 11: (-2, 4), 12: (2, 8)
+    }
 
-    except Exception as e:
-        print(f"Error in generate_kundali: {str(e)}")
-        return None
-    
-    
-    
-from django.http import JsonResponse
-import google.generativeai as genai
-from dotenv import load_dotenv
-import os
-load_dotenv()
-AI_API_KEY = os.getenv('AI_API_KEY')
-genai.configure(api_key=AI_API_KEY)
-model = genai.GenerativeModel("gemini-2.5-flash")
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax.axis("off")
 
-def kundali_report(person):
-    # Build system prompt
-    system_prompt = f"""
-    You are Astro AI, an expert astrologer.
-    Create a kundali for following person:
+    # Draw house diamonds
+    for house, (x, y) in diamond_houses.items():
+        diamond = plt.Polygon([[x-1,y-1],[x+1,y-1],[x+1,y+1],[x-1,y+1]], closed=True, fill=None, edgecolor='black', lw=2)
+        ax.add_patch(diamond)
+        ax.text(x, y+0.4, str(house), ha='center', va='center', fontsize=12, fontweight='bold', color='orange')
+        if house_planets.get(house):
+            text = "\n".join([f"{pl}-{planet_positions[pl]['deg']:.2f}°" for pl in house_planets[house]])
+            ax.text(x, y-0.1, text, ha='center', va='center', fontsize=9, color='blue')
 
-    Person:
-    - Name: {person['Name']}
-    - Birth Date: {person['Date']}
-    - Birth Time: {person['Time']}
-    - Birth Place: {person['place']}
 
-    Provide a kundali analysis in terms of:
-    - Love & Relationship
-    - Career/Partnership
-    - Emotional Connection
-    - Long-term Potential
+    ax.set_xlim(-3, 8)
+    ax.set_ylim(-3, 8)
+    plt.tight_layout()
 
-    End with an overall compatibility score (0-100%).
-    """
-    try:
-        response = model.generate_content(system_prompt)
-        return response.text
-    except Exception as e:
-        kundali_report(person)
+    # Save chart to base64
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    kundali_chart = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close()
+
+    return {
+        "ascendant": asc_deg,
+        "houses": cusps,
+        "planet_positions": planet_positions,
+        "house_planets": house_planets,
+        "house_signs": house_signs,
+        "kundali_chart": kundali_chart
+    }

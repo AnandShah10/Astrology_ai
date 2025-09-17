@@ -9,18 +9,29 @@ from django.core.cache import cache
 
 from .models import UserProfile
 from google.generativeai import GenerativeModel, configure
-import json
-import base64
-import os
+# from google.cloud import speech_v1p1beta1 as speech
+# from google.cloud import texttospeech
+import json,os
+import base64,io
+import tempfile
+import datetime
 from .forms import CustomSignupForm,UserProfileForm
 from geopy.geocoders import Nominatim
 from tzwhere import tzwhere
 from timezonefinderL import TimezoneFinder
 import pytz
+# import whisper
+from gtts import gTTS
+
+# Load Whisper model once (base is decent, tiny is faster)
+from faster_whisper import WhisperModel
+whisperModel = WhisperModel("base")
 from dotenv import load_dotenv
 from datetime import date
-from .utils.kundali import kundali_generate
-from .utils.compatibility import compatibility_report,perform_kundali_matching
+from .utils.kundali import get_kundali_chart
+from .utils.compatibility import compatibility_report
+from .utils.kundali_matching import perform_kundali_matching
+from .utils.chinese_zodiac import generate_bazi
 
 load_dotenv()
 
@@ -72,9 +83,29 @@ def chat_api(request):
         return JsonResponse({"error": "Invalid request"}, status=400)
 
     try:
+        message = None
+        is_voice = False
+
+        # Handle audio input if present (multipart/form-data)
+        if 'audio' in request.FILES:
+            print(request.FILES)
+            is_voice = True
+            audio_file = request.FILES['audio']
+            # Read audio content in memory
+            audio_content = audio_file.read()
+            print("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL")
+            segments, info = whisperModel.transcribe(io.BytesIO(audio_content))
+            print(segments)
+            try:
+                message = " ".join([seg.text.strip() for seg in segments])
+            except Exception as e:
+                return JsonResponse({"error": "Empty message"}, status=400)
+            print(message)
+        else:
         # Parse JSON efficiently
-        data = json.loads(request.body)
-        message = data.get("message", "").strip()
+            data = json.loads(request.body)
+            message = data.get("message", "").strip()
+            
         if not message:
             return JsonResponse({"error": "Empty message"}, status=400)
 
@@ -115,8 +146,25 @@ def chat_api(request):
         # Store only the last 20 messages in session
         request.session["chat_history"] = chat_history[-20:]
         request.session.modified = True  # Ensure session is saved
-
-        return JsonResponse({"reply": reply})
+        
+        # If voice mode, generate TTS audio
+        audio_base64 = None
+        if is_voice:
+            print("is_voice",is_voice)
+            audio_base64 = None
+            tts = gTTS(reply, lang="en")
+            audio_buffer = io.BytesIO()
+            tts.write_to_fp(audio_buffer)
+            audio_buffer.seek(0)
+            print(audio_buffer)
+            audio_base64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
+            
+            return JsonResponse({
+                "reply": reply,
+                "audio": audio_base64 if is_voice else None  # Send audio only if voice input
+            })
+        else:
+            return JsonResponse({"reply": reply})
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
     except AttributeError:
@@ -140,15 +188,22 @@ def horoscope(request):
     return render(request,'horoscope.html')
 
 def kundali(request):
-    if request.method == 'POST':
-        data= request.body
-        data = json.loads(data.decode('utf-8'))
-        print(data)
-        result = kundali_generate(data)
+    if request.method == "POST":
+        year = int(request.POST.get("year"))
+        month = int(request.POST.get("month"))
+        day = int(request.POST.get("day"))
+        hour = int(request.POST.get("hour"))
+        minute = int(request.POST.get("minute"))
+        second = int(request.POST.get('second'))
+        place = str(request.POST.get('place'))
+        lat,lon,tz = geocode_place_timezone(place)
+        now = datetime.datetime.now(tz)
+        offset_tz = float(now.utcoffset().total_seconds() / 3600)
+        result = get_kundali_chart(year,month,day,hour,minute,lat,lon,offset_tz)
         print(result)
-        return render(request,'kundali_chart.html',result)
+        return render(request,'kundali_result.html',result)
     else:
-        return render(request,'kundali_chart.html')
+        return render(request,'kundali_form.html')
 
 @csrf_exempt
 def compatibility(request):
@@ -159,11 +214,43 @@ def compatibility(request):
         person1,person2 = req.get('person1'),req.get('person2')
         print(person1,person2)
         # res=compatibility_report(person1,person2)
+        result = compatibility_report(person1,person2)
+        print(result)
+        data = {"text":result}
+        return JsonResponse(data)
+    else:
+        return render(request,'compatibility_form.html')
+    
+def kundali_matching(request):
+    if request.method == 'POST':
+        print(request.body)
+        req = json.loads(request.body.decode('utf-8'))
+        print(req)
+        person1,person2 = req.get('person1'),req.get('person2')
+        print(person1,person2)
+        # res=compatibility_report(person1,person2)
         result = perform_kundali_matching(person1,person2)
         print(result)
         return JsonResponse(result)
+    return render(request,'kundali_matching_form.html')
+    
+def bazi_view(request):
+    if request.method == "POST":
+        year = int(request.POST.get("year"))
+        month = int(request.POST.get("month"))
+        day = int(request.POST.get("day"))
+        hour = int(request.POST.get("hour"))
+
+        bazi, chart, day_master, master_info,element_percentages = generate_bazi(year, month, day, hour)
+        return render(request, "bazi_result.html", {
+            "bazi": bazi,
+            "chart": chart,
+            "day_master": day_master,
+            "master_info": master_info,
+            "element_percentages":element_percentages,
+        })
     else:
-        return render(request,'compatibility_form.html')
+        return render(request, "bazi_form.html")
 
 @login_required
 def edit_profile(request):
