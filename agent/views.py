@@ -11,7 +11,7 @@ from .models import UserProfile
 from google.generativeai import GenerativeModel, configure
 import json
 import base64
-import os
+import os,io
 from .forms import CustomSignupForm,UserProfileForm
 from geopy.geocoders import Nominatim
 from tzwhere import tzwhere
@@ -25,7 +25,10 @@ from .utils.kundali_matching import perform_kundali_matching
 from .utils.chinese_zodiac import generate_bazi
 from .utils.panchang import get_panchang
 load_dotenv()
+from gtts import gTTS
+from faster_whisper import WhisperModel
 
+whisperModel = WhisperModel("base")
 AI_API_KEY = os.getenv('AI_API_KEY')
 configure(api_key=AI_API_KEY)
 MODEL = GenerativeModel("gemini-2.5-flash")
@@ -74,9 +77,27 @@ def chat_api(request):
         return JsonResponse({"error": "Invalid request"}, status=400)
 
     try:
+        message = None
+        is_voice = False
+        # Handle audio input if present (multipart/form-data)
+        if 'audio' in request.FILES:
+            print(request.FILES)
+            is_voice = True
+            audio_file = request.FILES['audio']
+            # Read audio content in memory
+            audio_content = audio_file.read()
+            print("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL")
+            segments, info = whisperModel.transcribe(io.BytesIO(audio_content))
+            print(segments)
+            try:
+                message = " ".join([seg.text.strip() for seg in segments])
+            except Exception as e:
+                return JsonResponse({"error": "Empty message"}, status=400)
+            print(message)
+        else:
         # Parse JSON efficiently
-        data = json.loads(request.body)
-        message = data.get("message", "").strip()
+            data = json.loads(request.body)
+            message = data.get("message", "").strip()
         if not message:
             return JsonResponse({"error": "Empty message"}, status=400)
 
@@ -108,8 +129,15 @@ def chat_api(request):
         chat_history.append({"role": "user", "parts": [{"text": message}]})
 
         # Generate AI response
-        response = MODEL.generate_content(contents=chat_history[-20:])  # Limit history to last 20 messages
-        reply = response.text
+        # response = MODEL.generate_content(contents=chat_history[-20:])  # Limit history to last 20 messages
+        
+        chat = MODEL.start_chat(history=chat_history)
+        response = chat.send_message(message, stream=True)
+        
+        reply = ""
+        for chunk in response:
+            reply += chunk.text
+        # reply = response.text
 
         # Add assistant's response
         chat_history.append({"role": "model", "parts": [{"text": reply}]})
@@ -117,8 +145,23 @@ def chat_api(request):
         # Store only the last 20 messages in session
         request.session["chat_history"] = chat_history[-20:]
         request.session.modified = True  # Ensure session is saved
-
-        return JsonResponse({"reply": reply})
+        audio_base64 = None
+        if is_voice:
+            print("is_voice",is_voice)
+            audio_base64 = None
+            tts = gTTS(reply, lang="en")
+            audio_buffer = io.BytesIO()
+            tts.write_to_fp(audio_buffer)
+            audio_buffer.seek(0)
+            print(audio_buffer)
+            audio_base64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
+            
+            return JsonResponse({
+                "reply": reply,
+                "audio": audio_base64 if is_voice else None  # Send audio only if voice input
+            })
+        else:
+            return JsonResponse({"reply": reply})
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
     except AttributeError:
@@ -141,24 +184,27 @@ def chat(request):
 def horoscope(request):
     return render(request,'horoscope.html')
 
+@login_required
 def panchang_view(request):
     result = None
     if request.method == "POST":
-        date_str = request.POST.get("date")
-        time_str = request.POST.get("time", "12:00")
-        place = str(request.POST.get('place'))
-        lat,lon,tz = geocode_place_timezone(place)
+        y = int(date.today().year)
+        m = int(date.today().month)
+        d = int(date.today().day)
+        if request.POST.get('date'):
+            date_str = datetime.strptime(request.POST.get('date'),"%Y-%m-%d")
+            y,m,d = date_str.year,date_str.month,date_str.day
+        lat,lon,tz = geocode_place_timezone(str(request.POST.get('place',request.user.userprofile.birth_place)))
         now = datetime.now(tz)
         offset_tz = float(now.utcoffset().total_seconds() / 3600)
-
-        y, m, d = map(int, date_str.split("-"))
-        h, mi = map(int, time_str.split(":"))
+        h = datetime.now().hour
+        mi = datetime.now().minute
 
         result = get_panchang(y, m, d, h, mi, lat, lon, offset_tz)
-
+        print(result)
     return render(request, "panchang.html", {"result": result})
 
-
+@login_required
 def kundali(request):
     if request.method == "POST":
         year = int(request.POST.get("year"))

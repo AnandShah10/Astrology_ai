@@ -1,9 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Incomplete Profile{% endblock %}
+{% block title %}Error | Pardarshak AI{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-  <div class="alert alert-warning">
-    {{ msg }}
+<div class="container d-flex justify-content-center align-items-center mt-5">
+  <div class="col-md-8">
+    <div class="card shadow-lg border-0 rounded-4 bg-dark text-light">
+      <div class="card-body text-center p-4">
+        <div class="alert alert-warning fw-bold rounded-3">
+          {{ msg }}
+        </div>
+        <a href="{% url 'home' %}" class="btn btn-outline-light mt-3">
+          ← Back to Home
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

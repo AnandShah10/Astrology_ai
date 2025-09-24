@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Chat | Astro AI{% endblock %}
+{% block title %}Chat | Pathdarshak AI{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -7,19 +7,20 @@
     <div class="col-md-8">
       <div class="card shadow-lg border-0 astro-card">
         <div class="card-body d-flex flex-column" style="height: 75vh;">
-          <h3 class="text-center shimmer">🔮 Ask Astro AI</h3>
+          <h3 class="text-center shimmer">🔮 Ask Pathdarshak AI</h3>
           
           <!-- Chat Messages -->
           <div id="chat-box" class="flex-grow-1 overflow-auto mb-3 p-3 bg-dark rounded" style="min-height:200px;">
             <!-- Messages will appear here -->
-          </div>
-
-          <!-- Always Visible Predefined Queries -->
-         
+          </div>         
           
           <!-- Chat Input -->
           <form id="chat-form" class="d-flex">
             <input type="text" id="chat-input" class="form-control me-2" placeholder="Type your question..." required>
+             <!-- Voice Button -->
+            <button type="button" id="voice-btn" class="btn btn-light rounded-circle" style="width:45px;height:45px;">
+              <i class="bi bi-mic" id='voice-icon'></i>
+            </button>
             <button type="submit" class="btn btn-warning">Send</button>
           </form>
            <div id="query-section" style="overflow:auto;" class="mb-3">
@@ -38,32 +39,19 @@ document.addEventListener("DOMContentLoaded", function () {
   const input = document.getElementById("chat-input");
   const chatBox = document.getElementById("chat-box");
   const queryContainer = document.getElementById("predefined-queries");
+  const voiceBtn = document.getElementById("voice-btn");
+  const micIcon = document.getElementById("voice-icon");
 
-  // Predefined queries (merged by category)
+  // -------------------
+  // Predefined Queries
+  // -------------------
   const predefinedQueries = {
-    "Daily": [
-      "What does my horoscope say for today?",
-      "How will this week go for me?",
-      "Give me predictions for this month."
-    ],
-    "Love": [
-      "Will I find true love this year?",
-      "Is my partner compatible with me?",
-      "How will my marriage life be?"
-    ],
-    "Career": [
-      "Will I get a promotion this year?",
-      "Is this a good time to change jobs?",
-      "What career path suits my horoscope?"
-    ],
-    "Health": [
-      "What does my horoscope say about my health?",
-      "Am I prone to stress or anxiety?",
-      "Which period should I be cautious about health?"
-    ]
+    "Daily": ["What does my horoscope say for today?","How will this week go for me?","Give me predictions for this month."],
+    "Love": ["Will I find true love this year?","Is my partner compatible with me?","How will my marriage life be?"],
+    "Career": ["Will I get a promotion this year?","Is this a good time to change jobs?","What career path suits my horoscope?"],
+    "Health": ["What does my horoscope say about my health?","Am I prone to stress or anxiety?","Which period should I be cautious about health?"]
   };
 
-  // Render queries as pill buttons with category label
   Object.keys(predefinedQueries).forEach(category => {
     const label = document.createElement("div");
     label.className = "w-100 mt-2 fw-bold text-secondary";
@@ -83,20 +71,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Chat submission
+  // -------------------
+  // Chat Submission (Text)
+  // -------------------
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const message = input.value.trim();
     if (!message) return;
 
-    // User bubble
-    chatBox.innerHTML += `
-      <div class="d-flex justify-content-end mb-2">
-        <div class="p-2 bg-primary text-white rounded" style="max-width:70%;">${message}</div>
-      </div>`;
+    addUserBubble(message);
     input.value = "";
 
-    // API call
     const response = await fetch("{% url 'chat_api' %}", {
       method: "POST",
       headers: {
@@ -107,20 +92,104 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const data = await response.json();
-    let reply = data.reply
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\n/g, "<br>")
-        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    addAIBubble(data.reply);
 
-    // AI bubble
+    if (data.audio) {
+      playAudio(data.audio);
+    }
+  });
+
+   // -------------------
+  // Voice via WebSocket
+  // -------------------
+  const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+  const wsPath = `${wsScheme}://${window.location.host}/ws/voice/`;
+  const ws = new WebSocket(wsPath);
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log(data)
+    if (data.transcript) addUserBubble(data.transcript); // partial transcript
+    if (data.reply) addAIBubble(data.reply);             // AI text
+    if (data.audio) playAudio(data.audio); 
+  };
+
+  let mediaRecorder;
+  function startRecording() {
+          console.log("Recording Started...........................")
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+          console.log(event.data,'--------------------------------------')
+          ws.send(event.data);
+        }
+      };
+
+      mediaRecorder.start(250); // send chunks every 250ms
+
+      micIcon.classList.remove("bi-mic");
+      micIcon.classList.add("bi-mic-fill");
+      voiceBtn.classList.add("btn-danger");
+    });
+  }
+
+  function stopRecording() {
+    console.log("Recording stopped ....................................")
+    if (!mediaRecorder) return;
+    mediaRecorder.stop();
+
+    micIcon.classList.remove("bi-mic-fill");
+    micIcon.classList.add("bi-mic");
+    voiceBtn.classList.remove("btn-danger");
+
+    // Tell backend recording is done
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ "action": "stop" }));
+    }
+  }
+
+  // Desktop events
+  voiceBtn.addEventListener("mousedown", startRecording);
+  voiceBtn.addEventListener("mouseup", stopRecording);
+
+  // Mobile touch events
+  voiceBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startRecording(); });
+  voiceBtn.addEventListener("touchend", (e) => { e.preventDefault(); stopRecording(); });
+
+  // -------------------
+  // Helper Functions
+  // -------------------
+  function addUserBubble(message) {
     chatBox.innerHTML += `
-      <div class="d-flex justify-content-start mb-2">
-        <div class="p-2 bg-success text-white rounded" style="max-width:70%;">${reply}</div>
+      <div class="d-flex justify-content-end mb-2">
+        <div class="p-2 bg-primary text-white rounded" style="max-width:70%;">${message}</div>
       </div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
-  });
+  }
+
+  function addAIBubble(reply) {
+    let formatted = reply
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\n/g, "<br>")
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+    chatBox.innerHTML += `
+      <div class="d-flex justify-content-start mb-2">
+        <div class="p-2 bg-success text-white rounded" style="max-width:70%;">${formatted}</div>
+      </div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function playAudio(base64Audio) {
+    const audio = new Audio("data:audio/mp3;base64," + base64Audio);
+    console.log(audio)
+    audio.play();
+  }
 });
 </script>
 {% endblock %}

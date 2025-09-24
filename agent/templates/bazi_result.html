@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Chat | Astro AI{% endblock %}
+{% block title %}Chat | Pathdarshak AI{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-  <h2 class="mb-4 text-center">Your BaZi (Four Pillars)</h2>
+  <h2 class="mb-4 text-center shimmer">Your BaZi (Four Pillars)</h2>
 
   <!-- Pillars -->
   <div class="row g-4">
     {% for name, details in bazi.items %}
     <div class="col-md-3">
-      <div class="p-3 bg-dark text-light rounded-4 shadow-sm">
+      <div class="p-3 rounded-4 shadow-sm bazi-card text-light">
         <h6 class="fw-bold text-warning">{{ name }}</h6>
         <p class="fs-6 mb-1">{{ details.text }}</p>
         <hr class="border-light">
@@ -22,8 +22,8 @@
 
   <!-- Element Balance -->
   <div class="mt-5 text-center">
-    <h4>⚖️ Element Balance</h4>
-    <img src="data:image/png;base64,{{ chart }}" class="img-fluid rounded shadow mb-3">
+    <h4>⚖️<span class="shimmer"> Element Balance</span></h4>
+    <img src="data:image/png;base64,{{ chart }}" class="img-fluid rounded shadow mb-3" style="max-width:400px;">
 
     <!-- Legend with percentages -->
     <div class="row justify-content-center">
@@ -41,8 +41,8 @@
 
   <!-- Day Master -->
   <div class="mt-5 text-center">
-    <h4 class="fw-bold">🌟 Your Day Master</h4>
-    <div class="p-4 bg-dark text-light shadow rounded-4 mx-auto" style="max-width: 600px;">
+    <h4 class="fw-bold"><span class="shimmer"> Your Day Master</sapn></h4>
+    <div class="p-4 rounded-4 shadow bazi-card mx-auto" style="max-width: 600px;">
       <h5 class="text-info">{{ day_master }} ({{ master_info.element }})</h5>
       <p class="mb-2"><strong>Traits:</strong> {{ master_info.traits }}</p>
       <p class="mb-1"><strong>Favorable Elements:</strong> {{ master_info.favorable }}</p>
@@ -52,7 +52,35 @@
 
   <!-- Try Again Button -->
   <div class="mt-4 text-center">
-    <a href="{% url 'bazi' %}" class="btn btn-secondary">🔄 Try Again</a>
+    <a href="{% url 'bazi' %}" class="btn btn-warning btn-lg fw-bold">🔄 Try Again</a>
   </div>
 </div>
+
+<style>
+/* Card style similar to signup page */
+.bazi-card {
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,193,7,0.3);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.bazi-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(255,193,7,0.6);
+}
+
+/* Shimmer effect */
+.shimmer {
+  background: linear-gradient(90deg, #FFC107, #FF8C00, #FFC107);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+</style>
 {% endblock %}

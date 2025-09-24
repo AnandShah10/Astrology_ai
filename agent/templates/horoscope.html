@@ -1,37 +1,143 @@
 {% extends "base.html" %}
-{% block title %}Horoscope | Astro AI{% endblock %}
+{% block title %}Horoscope | Pathdarshak AI{% endblock %}
 
 {% block content %}
+<style>
+  /* Custom styles for attractiveness */
+  .astro-card {
+    background: linear-gradient(135deg, #1a1a2e, #16213e); /* Starry night gradient */
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+    color: #f8f9fa; /* Light text for entire card */
+  }
+  .astro-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7Fqk7mk0_Vo4SZKYUhXxPm4JPTV_2E_nldcZ8JjemO3c_SWCkknvwVaZFIx0q') no-repeat center/cover; /* Replace with a subtle starry image URL */
+    opacity: 0.1;
+    pointer-events: none; /* Allows clicks to pass through */
+  }
+  .shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(90deg, #ffffff 0%, #a8a8a8 50%, #ffffff 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: rgba(255, 255, 255, 0.8); /* Fallback if clip fails */
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .zodiac-card {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff; /* White text for cards */
+  }
+  .zodiac-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+  #horoscope-box {
+    transition: opacity 0.5s ease-in-out;
+    color: #f8f9fa !important; /* FIX: Force light text on box and all children */
+  }
+  #horoscope-box h5,
+  #horoscope-box strong,
+  #horoscope-box p {
+    color: #ffffff !important; /* FIX: Explicit for headers, bold, and paragraphs in reply */
+  }
+  .fade-in {
+    opacity: 1 !important; /* Ensure full visibility */
+  }
+  /* Responsiveness tweaks (unchanged) */
+  .zodiac-grid {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (max-width: 576px) {
+    .zodiac-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    h3 { font-size: 1.5rem; }
+  }
+  @media (min-width: 577px) and (max-width: 767px) {
+    .zodiac-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (min-width: 768px) {
+    .zodiac-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>
+
 <div class="container mt-4">
   <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card shadow-lg border-0 astro-card">
-        <div class="card-body">
-          <h3 class="text-center shimmer">🌌 Daily Horoscope</h3>
+    <div class="col-lg-8 col-md-10">
+      <div class="card shadow-lg border-0 astro-card position-relative">
+        <div class="card-body p-4">
+          <h3 class="text-center shimmer mb-4">🌌 Daily Horoscope</h3>
 
-          <!-- Zodiac Sign Selector -->
-          <div class="mb-3 text-center">
-            <label for="zodiac-select" class="form-label">Select Your Zodiac Sign:</label>
-            <select id="zodiac-select" class="form-select w-50 mx-auto">
-              <option value="" disabled selected>Choose...</option>
-              <option>Aries ♈</option>
-              <option>Taurus ♉</option>
-              <option>Gemini ♊</option>
-              <option>Cancer ♋</option>
-              <option>Leo ♌</option>
-              <option>Virgo ♍</option>
-              <option>Libra ♎</option>
-              <option>Scorpio ♏</option>
-              <option>Sagittarius ♐</option>
-              <option>Capricorn ♑</option>
-              <option>Aquarius ♒</option>
-              <option>Pisces ♓</option>
-            </select>
+          <!-- Zodiac Sign Selector: Grid of cards -->
+          <div id="zodiac-selector" class="mb-4">
+            <p class="text-center text-light mb-3">Tap your zodiac sign to reveal today's insights:</p>
+            <div class="zodiac-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Aries ♈" aria-label="Select Aries" tabindex="0" role="button">
+                <span class="fs-3">♈</span><br>Aries
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Taurus ♉" aria-label="Select Taurus" tabindex="0" role="button">
+                <span class="fs-3">♉</span><br>Taurus
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Gemini ♊" aria-label="Select Gemini" tabindex="0" role="button">
+                <span class="fs-3">♊</span><br>Gemini
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Cancer ♋" aria-label="Select Cancer" tabindex="0" role="button">
+                <span class="fs-3">♋</span><br>Cancer
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Leo ♌" aria-label="Select Leo" tabindex="0" role="button">
+                <span class="fs-3">♌</span><br>Leo
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Virgo ♍" aria-label="Select Virgo" tabindex="0" role="button">
+                <span class="fs-3">♍</span><br>Virgo
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Libra ♎" aria-label="Select Libra" tabindex="0" role="button">
+                <span class="fs-3">♎</span><br>Libra
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Scorpio ♏" aria-label="Select Scorpio" tabindex="0" role="button">
+                <span class="fs-3">♏</span><br>Scorpio
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Sagittarius ♐" aria-label="Select Sagittarius" tabindex="0" role="button">
+                <span class="fs-3">♐</span><br>Sagittarius
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Capricorn ♑" aria-label="Select Capricorn" tabindex="0" role="button">
+                <span class="fs-3">♑</span><br>Capricorn
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Aquarius ♒" aria-label="Select Aquarius" tabindex="0" role="button">
+                <span class="fs-3">♒</span><br>Aquarius
+              </div>
+              <div class="zodiac-card text-center p-3 rounded" data-sign="Pisces ♓" aria-label="Select Pisces" tabindex="0" role="button">
+                <span class="fs-3">♓</span><br>Pisces
+              </div>
+            </div>
           </div>
 
           <!-- Horoscope Result -->
-          <div id="horoscope-box" class="p-3 bg-dark text-light rounded" style="min-height:150px;">
-            🔮 Select your sign to reveal today’s horoscope...
+          <div id="horoscope-box" class="p-3 bg-dark text-light rounded" style="min-height: 150px; display: none;">
+            <!-- Content will be injected here -->
+          </div>
+
+          <!-- Back Button (hidden initially) -->
+          <div class="text-center mt-3" style="display: none;" id="back-container">
+            <button id="back-button" class="btn btn-outline-light">Back to Zodiac Selection</button>
           </div>
         </div>
       </div>
@@ -41,12 +147,29 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const zodiacSelect = document.getElementById("zodiac-select");
+  console.log("Script loaded!"); // Debug: Confirm script runs
+  const zodiacCards = document.querySelectorAll(".zodiac-card");
   const horoscopeBox = document.getElementById("horoscope-box");
+  const zodiacSelector = document.getElementById("zodiac-selector");
+  const backContainer = document.getElementById("back-container");
+  const backButton = document.getElementById("back-button");
 
-  zodiacSelect.addEventListener("change", async function () {
-    const sign = zodiacSelect.value;
+  zodiacCards.forEach(card => {
+    card.addEventListener("click", handleSignSelect);
+    card.addEventListener("touchstart", handleSignSelect); // Added for better mobile touch support
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleSignSelect(e);
+    });
+  });
+
+  async function handleSignSelect(e) {
+    const sign = e.currentTarget.dataset.sign;
+    console.log("Clicked sign:", sign); // Debug: Confirm click fires
     horoscopeBox.innerHTML = "⏳ Loading your horoscope...";
+    horoscopeBox.style.display = "block";
+    horoscopeBox.classList.remove("fade-in");
+    zodiacSelector.style.display = "none";
+    backContainer.style.display = "block";
 
     try {
       const response = await fetch("{% url 'chat_api' %}", {
@@ -58,6 +181,10 @@ document.addEventListener("DOMContentLoaded", function () {
         body: JSON.stringify({ message: `Give me today's horoscope for ${sign}` }),
       });
 
+      if (!response.ok) {
+        throw new Error("Network error: " + response.status);
+      }
+
       const data = await response.json();
       let reply = data.reply
         .replace(/&/g, "&amp;")
@@ -66,10 +193,20 @@ document.addEventListener("DOMContentLoaded", function () {
         .replace(/\n/g, "<br>")
         .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
-      horoscopeBox.innerHTML = reply;
+      horoscopeBox.innerHTML = `<h5 class="mb-3">${sign} Horoscope</h5>${reply}`;
+      horoscopeBox.classList.add("fade-in");
+      console.log("Horoscope loaded successfully"); // Debug: Success
     } catch (err) {
-      horoscopeBox.innerHTML = "⚠️ Error fetching horoscope. Please try again.";
+      console.error("Fetch error:", err); // Debug: Log errors
+      horoscopeBox.innerHTML = `⚠️ Error fetching horoscope. <button class="btn btn-sm btn-link text-light" onclick="handleSignSelect({currentTarget: {dataset: {sign: '${sign}'}}});">Retry</button>`;
     }
+  }
+
+  backButton.addEventListener("click", () => {
+    console.log("Back button clicked"); // Debug
+    zodiacSelector.style.display = "block";
+    horoscopeBox.style.display = "none";
+    backContainer.style.display = "none";
   });
 });
 </script>

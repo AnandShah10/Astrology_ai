@@ -34,3 +34,13 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"Profile({self.user.username})"
+
+class TarotCard(models.Model):
+    name = models.CharField(max_length=100)
+    suit = models.CharField(max_length=50)  # Major Arcana, Wands, Cups, Swords, Pentacles
+    meaning_upright = models.TextField()
+    meaning_reversed = models.TextField()
+    image = models.ImageField(upload_to="tarot/")
+
+    def __str__(self):
+        return self.name

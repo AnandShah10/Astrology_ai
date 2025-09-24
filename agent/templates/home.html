@@ -8,6 +8,12 @@
     position: relative;
     overflow: hidden;
     border-radius: 12px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .astro-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
   }
 
   .astro-card::before {
@@ -32,7 +38,7 @@
     content: "";
     position: absolute;
     inset: 2px;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.9);
     border-radius: 10px;
     z-index: 1;
   }
@@ -65,54 +71,60 @@
 
 <!-- Hero Section -->
 <div class="text-center mb-5">
-  <h1 class="display-4 fw-bold text-warning shimmer">Welcome to Pathdarshak ✨</h1>
-  <p class="lead text-light">Your AI-powered guide for <span class="fw-semibold text-info">daily horoscopes, kundli insights, and compatibility checks</span>.</p>
+  <h1 class="display-4 fw-bold text-warning"><span class="shimmer">Welcome to Pathdarshak</span> ✨</h1>
+  <p class="lead text-light">
+    Your AI-powered guide for <span class="fw-semibold text-info">daily horoscopes, kundli insights, and compatibility checks</span>.
+  </p>
 </div>
 
 <!-- Feature Cards -->
-<div class="row g-4">
+<div class="row g-4 justify-content-center">
   {% if user.is_authenticated %}
-    <div class="col-md-4">
+    <div class="col-md-4 col-sm-6">
       <div class="card astro-card shadow-lg h-100 text-center">
         <div class="card-body text-white">
-          <h5 class="card-title fw-bold shimmer">🌞 Daily Horoscope</h5>
+          <h5 class="card-title fw-bold">🌞<span class="shimmer"> Daily Horoscope</span></h5>
           <p class="card-text">Personalized predictions for your day, based on your stars.</p>
           <a href="{% url 'horoscope' %}" class="btn btn-light btn-sm mt-2">Get Horoscope</a>
         </div>
       </div>
     </div>
-    {% comment %} <div class="col-md-4">
+
+    <div class="col-md-4 col-sm-6">
       <div class="card astro-card shadow-lg h-100 text-center">
         <div class="card-body text-white">
-          <h5 class="card-title fw-bold shimmer">📜 Kundli Report</h5>
-          <p class="card-text">Discover your birth chart and its hidden messages.</p>
-          <a href="{% url 'kundali' %}" class="btn btn-light btn-sm mt-2">View Report</a>
+          <h5 class="card-title fw-bold">🕉<span class="shimmer"> Daily Panchang</span></h5>
+          <p class="card-text">Your daily Panchang guide for the perfect blend of tradition, timing, and cosmic energy.</p>
+          <a href="{% url 'panchang' %}" class="btn btn-light btn-sm mt-2">Get panchang</a>
         </div>
       </div>
-    </div> {% endcomment %}
-    <div class="col-md-4">
+    </div>
+
+    <div class="col-md-4 col-sm-6">
       <div class="card astro-card shadow-lg h-100 text-center">
         <div class="card-body text-white">
-          <h5 class="card-title fw-bold shimmer">🤝 Kundli Matching</h5>
-          <p class="card-text"> Check Love Compatibility and Marriage Prediction.</p>
+          <h5 class="card-title fw-bold">🤝<span class="shimmer"> Kundli Matching</span></h5>
+          <p class="card-text">Check love compatibility and marriage prediction.</p>
           <a href="{% url 'kundali-match' %}" class="btn btn-light btn-sm mt-2">View Report</a>
         </div>
       </div>
     </div>
-    <div class="col-md-4">
+    
+    <div class="col-md-4 col-sm-6">
       <div class="card astro-card shadow-lg h-100 text-center">
         <div class="card-body text-white">
-          <h5 class="card-title fw-bold shimmer">💞 Compatibility</h5>
+          <h5 class="card-title fw-bold">💞<span class="shimmer"> Compatibility</span></h5>
           <p class="card-text">See how your stars align with someone special.</p>
           <a href="{% url 'compatibility' %}" class="btn btn-light btn-sm mt-2">Check Now</a>
         </div>
       </div>
     </div>
-    <div class="col-md-4">
+
+    <div class="col-md-4 col-sm-6">
       <div class="card astro-card shadow-lg h-100 text-center">
         <div class="card-body text-white">
-          <h5 class="card-title fw-bold shimmer">☯︎ Chinese zordic</h5>
-          <p class="card-text">Find your chinese zordic chart.</p>
+          <h5 class="card-title fw-bold">☯︎<span class="shimmer"> Chinese Zodiac</span></h5>
+          <p class="card-text">Find your Chinese zodiac chart.</p>
           <a href="{% url 'bazi' %}" class="btn btn-light btn-sm mt-2">Check Now</a>
         </div>
       </div>
@@ -121,7 +133,7 @@
     <div class="col-12">
       <div class="alert alert-info text-center shadow-sm">
         Please <a href="{% url 'login' %}" class="alert-link">login</a> or 
-        <a href="{% url 'signup' %}" class="alert-link">singup</a> to access your readings.
+        <a href="{% url 'signup' %}" class="alert-link">signup</a> to access your readings.
       </div>
     </div>
   {% endif %}

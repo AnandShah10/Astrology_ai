@@ -2,12 +2,12 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework import generics, status
+from rest_framework import generics
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
 from .models import UserProfile
-from .serializers import UserProfileSerializer, UserSerializer, TimeRangeSerializer,PanchangSerializer
-from datetime import date
+from .serializers import UserProfileSerializer,PanchangSerializer
+from datetime import date,datetime
 import os
 from google.generativeai import GenerativeModel, configure
 from dotenv import load_dotenv
@@ -66,8 +66,13 @@ def chat_api(request):
 
     chat_history.append({"role": "user", "parts": [{"text": message}]})
 
-    response = MODEL.generate_content(contents=chat_history[-20:])
-    reply = response.text
+    # response = MODEL.generate_content(contents=chat_history[-20:])
+    # reply = response.text
+    chat = MODEL.start_chat(history=chat_history)        
+    user_message_part = {"role": "user", "parts": [{"text": message}]}
+    chat_history.append(user_message_part)        
+    response_stream = chat.send_message(user_message_part, stream=True)
+    reply = "".join(chunk.text for chunk in response_stream)
 
     chat_history.append({"role": "model", "parts": [{"text": reply}]})
     request.session["chat_history"] = chat_history[-20:]
@@ -80,16 +85,19 @@ def chat_api(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])  # you can change to [IsAuthenticated] if login required
 def panchang_api(request):
-    try:
-        # Parameters from query string
-        year = int(request.GET.get("year", date.today().year))
-        month = int(request.GET.get("month", date.today().month))
-        day = int(request.GET.get("day", date.today().day))
-        lat = float(request.GET.get("lat", 28.6139))   # default Delhi
-        lon = float(request.GET.get("lon", 77.2090))
-        tz = float(request.GET.get("tz", 5.5))        # default IST
-
-        result = get_panchang(year, month, day, lat, lon, tz)
+    try:    
+        year = int(date.today().year)
+        month = int(date.today().month)
+        day = int(date.today().day)
+        if request.POST.get('date'):
+            date_str = datetime.strptime(request.POST.get('date'),"%Y-%m-%d")
+            year,month,day = date_str.year,date_str.month,date_str.day
+        lat,lon,tz = geocode_place_timezone(request.user.userprofile.birth_place)
+        now = datetime.now(tz)
+        offset_tz = float(now.utcoffset().total_seconds() / 3600)
+        h = datetime.now().hour
+        mi = datetime.now().minute
+        result = get_panchang(year, month, day, h,  mi, lat, lon, offset_tz)
 
         serializer = PanchangSerializer(result)
         return Response(serializer.data)

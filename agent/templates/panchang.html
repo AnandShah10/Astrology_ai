@@ -1,72 +1,186 @@
 {% extends "base.html" %}
-{% block title %}Home | Pathdarshak{% endblock %}
+{% block title %}Panchang | Pathdarshak{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <div class="card shadow p-4">
-    <h3 class="text-center">🕉 Panchang Finder</h3>
-    <form method="post" class="mt-3">
-      {% csrf_token %}
-      <div class="row">
-        <div class="col-md-6">
-          <label>Date</label>
-          <input type="date" name="date" class="form-control" required>
-        </div>
-        <div class="col-md-6">
-          <label>Time</label>
-          <input type="time" name="time" class="form-control" value="12:00">
+<style>
+  /* Enhanced styles for beauty, user-friendliness, and responsiveness */
+  .panchang-card {
+    background: linear-gradient(135deg, #1a1a2e, #16213e); /* Mystical gradient */
+    border-radius: 20px; /* Softer corners */
+    overflow: hidden;
+    position: relative;
+    color: #f8f9fa; /* Light text base */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Deeper shadow for depth */
+  }
+  .panchang-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://example.com/starry-bg.png') no-repeat center/cover; /* Optional starry overlay */
+    opacity: 0.08; /* Subtler opacity */
+    pointer-events: none;
+  }
+  .shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(90deg, #ffffff 0%, #a8a8a8 50%, #ffffff 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: rgba(255, 255, 255, 0.8); /* Fallback visibility */
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .form-label {
+    font-weight: 500;
+    color: #e0e0e0; /* Softer label color */
+  }
+  .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-radius: 8px; /* Rounded inputs */
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .form-control:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #8f94fb;
+    box-shadow: 0 0 0 0.2rem rgba(143, 148, 251, 0.25);
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #4e54c8, #8f94fb); /* Vibrant button gradient */
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(78, 84, 200, 0.4);
+  }
+  .result-section {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 1; /* For fade-in if JS added later */
+  }
+  .list-group-item {
+    background: transparent;
+    border: none;
+    color: #f8f9fa;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between; /* Better alignment for key-value */
+    flex-wrap: wrap;
+  }
+  .list-group-item strong {
+    flex: 1 0 40%;
+    color: #ffffff; /* Bold keys */
+  }
+  .list-group-item span {
+    flex: 1 0 60%;
+    text-align: right;
+  }
+  .list-group-item:last-child {
+    border-bottom: none;
+  }
+  /* Responsiveness enhancements */
+  @media (max-width: 576px) {
+    .row > div {
+      margin-bottom: 1.5rem;
+    }
+    .list-group-item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .list-group-item span {
+      text-align: left;
+      margin-top: 0.25rem;
+    }
+    h3 { font-size: 1.75rem; }
+    h5 { font-size: 1.25rem; }
+  }
+  @media (min-width: 768px) {
+    .form-row {
+      align-items: flex-end; /* Align form elements better */
+    }
+  }
+</style>
+
+<div class="container mt-5"> <!-- Increased top margin for breathing room -->
+  <div class="row justify-content-center">
+    <div class="col-xl-8 col-lg-9 col-md-10 col-sm-12"> <!-- Flexible column widths for responsiveness -->
+      <div class="card border-0 panchang-card position-relative">
+        <div class="card-body p-4 p-md-5"> <!-- More padding on larger screens -->
+          <h3 class="text-center shimmer mb-4">🕉 Panchang</h3>
+          
+          <!-- Form: User-friendly with placeholders and labels -->
+          <form method="post" class="mt-4">
+            {% csrf_token %}
+            <div class="row form-row gy-3"> <!-- gy-3 for vertical spacing -->
+              <div class="col-md-4">
+                <label for="date" class="form-label">Select Date</label>
+                <input type="date" name="date" id="date" class="form-control" value="{% now "Y-m-d" %}" required>
+              </div>
+              <div class="col-md-8">
+                <label for="place" class="form-label">Enter Place</label>
+                <input type="text" name="place" id="place" class="form-control" placeholder="e.g., New York, USA" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-4 w-100">Reveal Panchang Insights</button> <!-- More engaging button text -->
+          </form>
+
+          {% if result %}
+          <div class="result-section">
+            <h5 class="text-center mb-4 shimmer">📜 Panchang for {{ result.date }} at {{ result.place }}</h5>
+            <ul class="list-group">
+              <li class="list-group-item"><strong>Tithi:</strong> <span>{{ result.tithi }}</span></li>
+              <li class="list-group-item"><strong>Paksha:</strong> <span>{{ result.paksha }}</span></li>
+              <li class="list-group-item"><strong>Nakshatra:</strong> <span>{{ result.nakshatra }}</span></li>
+              <li class="list-group-item"><strong>Yoga:</strong> <span>{{ result.yoga }}</span></li>
+              <li class="list-group-item"><strong>Karana:</strong> <span>{{ result.karana_1 }} - {{ result.karana_1_range }}</span><span>{{ result.karana_2 }} - {{ result.karana_2_range }}</span></li>
+              <li class="list-group-item"><strong>Vara:</strong> <span>{{ result.vara }}</span></li>
+              <li class="list-group-item"><strong>Sunrise:</strong> <span>{{ result.sunrise }}</span></li>
+              <li class="list-group-item"><strong>Sunset:</strong> <span>{{ result.sunset }}</span></li>
+              <li class="list-group-item"><strong>Moonrise:</strong> <span>{{ result.moonrise }}</span></li>
+              <li class="list-group-item"><strong>Moonset:</strong> <span>{{ result.moonset }}</span></li>
+              <li class="list-group-item"><strong>Rahu Kaal:</strong> <span>{{ result.rahu_kaal }}</span></li>
+              <li class="list-group-item"><strong>Gulika Kaal:</strong> <span>{{ result.gulika_kaal }}</span></li>
+              <li class="list-group-item"><strong>Yamaganda:</strong> <span>{{ result.yamaganda }}</span></li>
+              <li class="list-group-item"><strong>Abhijit Muhurta:</strong> <span>{{ result.abhijit_muhurta }}</span></li>
+            </ul>
+          </div>
+
+          {% if result.choghadiya_day %}
+          <div class="result-section mt-4">
+            <h5 class="text-center mb-3 shimmer">🌞 Day Choghadiya</h5>
+            <ul class="list-group">
+              {% for cho in result.choghadiya_day %}
+              <li class="list-group-item"><strong>{{ cho.name }}:</strong> <span>{{ cho.time }}</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="result-section mt-4">
+            <h5 class="text-center mb-3 shimmer">🌙 Night Choghadiya</h5>
+            <ul class="list-group">
+              {% for cho in result.choghadiya_night %}
+              <li class="list-group-item"><strong>{{ cho.name }}:</strong> <span>{{ cho.time }}</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+          {% endif %}
         </div>
       </div>
-      <div class="row mt-3">
-        <div class="col-md-6">
-          <label>Latitude</label>
-          <input type="text" name="lat" class="form-control" value="28.6139">
-        </div>
-        <div class="col-md-6">
-          <label>Longitude</label>
-          <input type="text" name="lon" class="form-control" value="77.2090">
-        </div>
-      </div>
-      <button type="submit" class="btn btn-primary mt-3 w-100">Get Panchang</button>
-    </form>
-
-    {% if result %}
-<div class="mt-4">
-  <h5 class="text-center">📜 Panchang Result</h5>
-  <ul class="list-group">
-    <li class="list-group-item"><b>Tithi:</b> {{ result.tithi }}</li>
-    <li class="list-group-item"><b>Nakshatra:</b> {{ result.nakshatra }}</li>
-    <li class="list-group-item"><b>Yoga:</b> {{ result.yoga }}</li>
-    <li class="list-group-item"><b>Karana:</b> {{ result.karana }}</li>
-    <li class="list-group-item"><b>Weekday:</b> {{ result.weekday }}</li>
-    <li class="list-group-item"><b>Sunrise:</b> {{ result.sunrise }}</li>
-    <li class="list-group-item"><b>Sunset:</b> {{ result.sunset }}</li>
-    <li class="list-group-item"><b>Rahu Kaal:</b> {{ result.rahu_kaal }}</li>
-    <li class="list-group-item"><b>Gulika Kaal:</b> {{ result.gulika_kaal }}</li>
-    <li class="list-group-item"><b>Yamaganda:</b> {{ result.yamaganda }}</li>
-    <li class="list-group-item"><b>Abhijit Muhurta:</b> {{ result.abhijit_muhurta }}</li>
-  </ul>
-    {% if result.choghadiya_day %}
-    <div class="mt-4">
-    <h5>🌞 Day Choghadiya</h5>
-    <ul class="list-group">
-        {% for cho in result.choghadiya_day %}
-        <li class="list-group-item"><b>{{ cho.name }}</b>: {{ cho.time }}</li>
-        {% endfor %}
-    </ul>
     </div>
-    <div class="mt-4">
-    <h5>🌙 Night Choghadiya</h5>
-    <ul class="list-group">
-        {% for cho in result.choghadiya_night %}
-        <li class="list-group-item"><b>{{ cho.name }}</b>: {{ cho.time }}</li>
-        {% endfor %}
-    </ul>
-    </div>
-{% endif %}
-
-</div>
-{% endif %}
   </div>
 </div>
 {% endblock %}

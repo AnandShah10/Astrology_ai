@@ -1,18 +1,95 @@
 {% extends "base.html" %}
-{% block title %}Chat | Astro AI{% endblock %}
+{% block title %}BaZi Calculator | Pathdarshak AI{% endblock %}
 
 {% block content %}
-  <div class="container py-5">
-    <h2 class="mb-4 text-center">BaZi (Four Pillars) Calculator</h2>
-    <form method="post" class="p-4 bg-white rounded-3 shadow-sm">
-      {% csrf_token %}
-      <div class="row g-3">
-        <div class="col-md-3"><input type="number" name="year" class="form-control" placeholder="Year" required></div>
-        <div class="col-md-3"><input type="number" name="month" class="form-control" placeholder="Month" required></div>
-        <div class="col-md-3"><input type="number" name="day" class="form-control" placeholder="Day" required></div>
-        <div class="col-md-3"><input type="number" name="hour" class="form-control" placeholder="Hour (0-23)" required></div>
+<div class="container py-5">
+  <h2 class="mb-4 text-center text-warning">✨<span class="shimmer"> BaZi (Four Pillars) Calculator</span></h2>
+
+  <form method="post" class="bazi-form p-4 p-md-5 rounded-4 shadow-lg mx-auto" style="max-width: 600px; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);">
+    {% csrf_token %}
+    <div class="row g-3">
+      <div class="col-md-3">
+        <input type="number" name="year" class="form-control bazi-input" placeholder="Year" required>
       </div>
-      <button class="btn btn-primary mt-4 w-100">Generate BaZi Chart</button>
-    </form>
-  </div>
+      <div class="col-md-3">
+        <input type="number" name="month" class="form-control bazi-input" placeholder="Month" min="1" max="12" required>
+      </div>
+      <div class="col-md-3">
+        <input type="number" name="day" class="form-control bazi-input" placeholder="Day" min="1" max="31" required>
+      </div>
+      <div class="col-md-3">
+        <input type="number" name="hour" class="form-control bazi-input" placeholder="Hour (0-23)" min="0" max="23" required>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-warning btn-lg mt-4 w-100 fw-bold shimmer-btn">Generate BaZi Chart</button>
+  </form>
+</div>
+
+<style>
+/* Shimmer title */
+.shimmer {
+  font-size: 1.8rem;
+  font-weight: bold;
+  background: linear-gradient(90deg, #FFC107, #FF8C00, #FFC107);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Shimmer button */
+.shimmer-btn {
+  background: linear-gradient(90deg, #FFC107, #FF8C00);
+  color: #fff;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(255,193,7,0.5);
+}
+.shimmer-btn:hover {
+  background: linear-gradient(90deg, #FF8C00, #FFC107);
+  transform: scale(1.05);
+  box-shadow: 0 0 35px rgba(255,193,7,0.7);
+}
+
+/* Inputs */
+.bazi-input {
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: hsla(0, 0%, 100%, 0.05);
+  color: #fff !important;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+.bazi-input:focus {
+  border-color: #FFC107;
+  box-shadow: 0 0 15px rgba(255,193,7,0.5);
+  outline: none;
+  background: rgba(0,0,0,0.9);
+}
+
+.bazi-input::placeholder {
+  color: rgba(255, 255, 255, 0.6); /* Lighter placeholder */
+}
+/* Form */
+.bazi-form {
+  animation: fadeIn 1s ease;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive tweaks */
+@media (max-width: 576px) {
+  .bazi-form { padding: 2rem; }
+}
+</style>
 {% endblock %}

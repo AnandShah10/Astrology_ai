@@ -1,36 +1,50 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="profile-bg" style="height: 100vh; display: flex; justify-content: center; align-items: center; background: url('/static/images/cosmic-bg.jpg') no-repeat center/cover;">
-  <div class="astro-card p-4 p-md-5 rounded-4 shadow-lg text-center">
+<div class="profile-bg">
+  <div class="astro-card p-4 p-md-5 rounded-4 text-center">
     <div class="mb-4">
-      <h2 class="title"> Enter/Update Your Birth Details</h2>
+      <h2 class="title">Enter / Update Your Birth Details</h2>
+      <p class="subtitle">Your cosmic journey begins here ✨</p>
     </div>
 
     <form method="post" action="{% url 'save_profile' %}" class="text-start">
       {% csrf_token %}
 
       <!-- Birth Date -->
-      <div class="form-group mb-3 position-relative">
-        <i class="bi bi-calendar-event"></i>
-        {{ form.birth_date }}
+      <div class="form-group mb-4">
+        <label class="floating-label">
+          <i class="bi bi-calendar-event"></i>
+          {{ form.birth_date }}
+          <span>Date of Birth</span>
+        </label>
       </div>
 
       <!-- Birth Time -->
-      <div class="form-group mb-3 position-relative">
-        <i class="bi bi-clock"></i>
-        {{ form.birth_time }}
+      <div class="form-group mb-4">
+        <label class="floating-label">
+          <i class="bi bi-clock"></i>
+          {{ form.birth_time }}
+          <span>Time of Birth</span>
+        </label>
       </div>
 
       <!-- Birth Place -->
-      <div class="form-group mb-3 position-relative">
-        <i class="bi bi-geo-alt"></i>
-        {{ form.birth_place }}
+      <div class="form-group mb-4">
+        <label class="floating-label">
+          <i class="bi bi-geo-alt"></i>
+          {{ form.birth_place }}
+          <span>Place of Birth</span>
+        </label>
       </div>
 
       <!-- Astrology System -->
-      <div class="form-group mb-4 astro-sys">
-        {{ form.system }}
+      <div class="form-group mb-4">
+        <label class="floating-label">
+          <i class="bi bi-stars"></i>
+          {{ form.system }}
+          <span>Astrology System</span>
+        </label>
       </div>
 
       <!-- Submit Button -->
@@ -41,24 +55,30 @@
   </div>
 </div>
 
-<!-- Bootstrap Icons CDN -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
 <style>
+/* Background */
+.profile-bg {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url('/static/images/cosmic-bg.jpg') no-repeat center/cover;
+  overflow: hidden;
+}
+
 /* Card */
 .astro-card {
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(10px);
-  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  border-radius: 1.5rem;
   width: 100%;
-  max-width: 450px;
+  max-width: 480px;
   color: #fff;
-  box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 30px rgba(255, 193, 7, 0.3);
+  animation: fadeIn 1s ease;
 }
 .astro-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0 50px rgba(255, 193, 7, 0.7);
+  box-shadow: 0 0 50px rgba(255, 193, 7, 0.6);
 }
 
 /* Title */
@@ -67,65 +87,100 @@
   background: linear-gradient(90deg, #FFC107, #FF8C00);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmer 3s linear infinite;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 .subtitle {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #f0e68c;
 }
 
-/* Shimmer Animation */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* Form Inputs */
-.form-group {
+/* Floating Label */
+.floating-label {
   position: relative;
+  display: block;
+  width: 100%;
 }
-.form-group i {
+.floating-label i {
   position: absolute;
-  left: 15px;
   top: 50%;
+  left: 15px;
   transform: translateY(-50%);
   color: #FFC107;
   font-size: 1.2rem;
 }
-input[type="date"], input[type="time"], input[type="text"], .astro-sys {
+.floating-label input,
+.floating-label select {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
-  border-radius: 0.5rem;
-  border: 1px solid #555;
+  padding: 0.9rem 1rem 0.9rem 2.8rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.2);
   background: rgba(255,255,255,0.05);
   color: #fff;
+  font-size: 1rem;
   transition: all 0.3s ease;
 }
-input:focus, .astro-sys:focus {
+.floating-label select option {
+  background: #111;         /* Dark background for dropdown */
+  color: #fff;              /* White text for visibility */
+  padding: 0.5rem;
+}
+.floating-label span {
+  position: absolute;
+  top: 50%;
+  left: 2.8rem;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  color: #bbb;
+  transition: 0.3s ease;
+  pointer-events: none;
+}
+.floating-label input:focus,
+.floating-label select:focus {
   border-color: #FFC107;
-  box-shadow: 0 0 15px rgba(255, 193, 7, 0.5);
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
   outline: none;
+}
+.floating-label input:focus + span,
+.floating-label input:not(:placeholder-shown) + span,
+.floating-label select:focus + span,
+.floating-label select:not([value=""]) + span {
+  top: -8px;
+  left: 2.5rem;
+  font-size: 0.75rem;
+  color: #FFC107;
+  background: rgba(0,0,0,0.6);
+  padding: 0 5px;
+  border-radius: 4px;
 }
 
 /* Button */
 .btn-submit {
   background: linear-gradient(90deg, #FFC107, #FF8C00);
   color: #fff;
-  padding: 0.75rem 2rem;
+  padding: 0.9rem 2.2rem;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   font-size: 1.1rem;
   font-weight: bold;
   transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
 }
 .btn-submit:hover {
   transform: scale(1.05);
   background: linear-gradient(90deg, #FF8C00, #FFC107);
+  box-shadow: 0 0 30px rgba(255, 193, 7, 0.6);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive */
 @media (max-width: 576px) {
-  .title { font-size: 1.5rem; }
+  .title { font-size: 1.6rem; }
   .astro-card { padding: 2rem; }
 }
 </style>

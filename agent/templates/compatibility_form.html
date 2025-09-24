@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Compatibility Report | Astro AI{% endblock %}
+{% block title %}Compatibility Report | Pathdarshak AI{% endblock %}
 
 {% block content %}
 <div class="container my-5">
@@ -44,13 +44,14 @@
               <button type="submit" class="btn btn-success px-5">Check Compatibility</button>
             </div>
           </form>
+
           <!-- Loader -->
-            <div id="compatibility-loader" class="text-center my-4" style="display:none;">
-              <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-              <p class="mt-2 text-dark">🔮 Calculating compatibility...</p>
+          <div id="compatibility-loader" class="text-center my-4" style="display:none;">
+            <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+              <span class="visually-hidden">Loading...</span>
             </div>
+            <p class="mt-2 text-dark">🔮 Calculating compatibility...</p>
+          </div>
 
           <!-- Result -->
           <div id="compatibility-result" class="mt-5"></div>
@@ -61,28 +62,19 @@
 </div>
 
 <script>
-  function formatCompatibility(text) {
-  let sections = {
-    love: "",
-    career: "",
-    emotional: "",
-    longterm: "",
-    score: "",
-  };
+function formatCompatibility(text) {
+  const sections = { love: "", career: "", emotional: "", longterm: "", score: "" };
 
+  // Split into lines
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
   lines.forEach(line => {
     const lower = line.toLowerCase();
-
-    if (lower.includes("### Love & Relationship")) sections.love += line + "\n";
-    else if (lower.includes("###Career/Partnership") || lower.includes("Career/Partnership") || lower.includes("partnership") || lower.includes("professional"))
-      sections.career += line + "\n";
-    else if (lower.includes("### Emotional Connection") || lower.includes("###Emotional Connection"))
-      sections.emotional += line + "\n";
-    else if (lower.includes("### Long-term Potential") || lower.includes("Long-term Potential") || lower.includes("future") || lower.includes("potential"))
-      sections.longterm += line + "\n";
-    else if (lower.includes("compatibility") || lower.includes("overall"))
-      sections.score += line + "\n";
+    if (lower.includes("love") || lower.includes("relationship")) sections.love += line + "\n";
+    else if (lower.includes("career") || lower.includes("partnership") || lower.includes("professional")) sections.career += line + "\n";
+    else if (lower.includes("emotional")) sections.emotional += line + "\n";
+    else if (lower.includes("long-term") || lower.includes("future") || lower.includes("potential")) sections.longterm += line + "\n";
+    else if (lower.includes("compatibility") || lower.includes("overall")) sections.score += line + "\n";
   });
 
   // Extract numeric score
@@ -90,12 +82,11 @@
   const scoreMatch = sections.score.match(/(\d+)%/);
   if (scoreMatch) scoreValue = parseInt(scoreMatch[1], 10);
 
-  // Dynamic progress bar color
+  // Determine progress bar color
   let barClass = "bg-danger";
   if (scoreValue >= 70) barClass = "bg-success";
   else if (scoreValue >= 40) barClass = "bg-warning text-dark";
 
-  // Convert markdown-style bullets & bold to HTML
   function formatText(t) {
     if (!t) return "No details provided.";
     return t
@@ -105,52 +96,41 @@
       .replace(/\n/g, "<br>");                          // line breaks
   }
 
-  // If parsing fails, fallback
-  const parsedSections = Object.values(sections).filter(s => s).length;
-  if (parsedSections <= 1) {
-    return `
-      <div class="card border-0 shadow bg-light">
-        <div class="card-body">
-          <h5 class="card-title">🔮 Compatibility Report</h5>
-          <div class="compatibility-text">${formatText(text)}</div>
-        </div>
-      </div>
-    `;
+  // Fallback if parsing fails
+  if (Object.values(sections).filter(s => s).length <= 1) {
+    return `<div class="card border-0 shadow bg-light">
+              <div class="card-body">
+                <h5 class="card-title">🔮 Compatibility Report</h5>
+                <div class="compatibility-text">${formatText(text)}</div>
+              </div>
+            </div>`;
   }
 
   return `
     <div class="row">
       <div class="col-12 mb-3">
-        <div class="card border-0 shadow bg-light">
-          <div class="card-body">
-            <h5 class="card-title">💞 Love & Relationship</h5>
-            <div class="compatibility-text">${formatText(sections.love)}</div>
-          </div>
-        </div>
+        <div class="card border-0 shadow bg-light"><div class="card-body">
+          <h5 class="card-title">💞 Love & Relationship</h5>
+          <div class="compatibility-text">${formatText(sections.love)}</div>
+        </div></div>
       </div>
       <div class="col-12 mb-3">
-        <div class="card border-0 shadow bg-light">
-          <div class="card-body">
-            <h5 class="card-title">💼 Career & Partnership</h5>
-            <div class="compatibility-text">${formatText(sections.career)}</div>
-          </div>
-        </div>
+        <div class="card border-0 shadow bg-light"><div class="card-body">
+          <h5 class="card-title">💼 Career & Partnership</h5>
+          <div class="compatibility-text">${formatText(sections.career)}</div>
+        </div></div>
       </div>
       <div class="col-12 mb-3">
-        <div class="card border-0 shadow bg-light">
-          <div class="card-body">
-            <h5 class="card-title">🌙 Emotional Connection</h5>
-            <div class="compatibility-text">${formatText(sections.emotional)}</div>
-          </div>
-        </div>
+        <div class="card border-0 shadow bg-light"><div class="card-body">
+          <h5 class="card-title">🌙 Emotional Connection</h5>
+          <div class="compatibility-text">${formatText(sections.emotional)}</div>
+        </div></div>
       </div>
       <div class="col-12 mb-3">
-        <div class="card border-0 shadow bg-light">
-          <div class="card-body">
-            <h5 class="card-title">⏳ Long-term Potential</h5>
-            <div class="compatibility-text">${formatText(sections.longterm)}</div>
-          </div>
-        </div>
+        <div class="card border-0 shadow bg-light"><div class="card-body">
+          <h5 class="card-title">⏳ Long-term Potential</h5>
+          <div class="compatibility-text">${formatText(sections.longterm)}</div>
+        </div></div>
       </div>
       <div class="col-12">
         <div class="card border-0 shadow bg-warning">
@@ -181,36 +161,19 @@ document.getElementById("compatibility-form").addEventListener("submit", async f
   const formData = new FormData(this);
   const payload = Object.fromEntries(formData.entries());
 
-  const person1 = {
-    "Name": payload["name1"],
-    "Date": payload["date1"],
-    "Time": payload["time1"],
-    "Place": payload["place1"]
-  };
-  const person2 = {
-    "Name": payload["name2"],
-    "Date": payload["date2"],
-    "Time": payload["time2"],
-    "Place": payload["place2"]
-  };
+  const person1 = { Name: payload["name1"], Date: payload["date1"], Time: payload["time1"], Place: payload["place1"] };
+  const person2 = { Name: payload["name2"], Date: payload["date2"], Time: payload["time2"], Place: payload["place2"] };
 
   try {
     const response = await fetch("{% url 'compatibility' %}", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
-      },
+      headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
       body: JSON.stringify({ person1, person2 }),
     });
 
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    console.log(data)
-    // Build HTML
-    html = data['text']
-
-    resultBox.innerHTML = formatCompatibility(html);
-
+    resultBox.innerHTML = formatCompatibility(data['text']);
   } catch (error) {
     resultBox.innerHTML = `<div class="alert alert-danger">⚠️ Error: ${error.message}</div>`;
   } finally {
@@ -218,5 +181,4 @@ document.getElementById("compatibility-form").addEventListener("submit", async f
   }
 });
 </script>
-
 {% endblock %}

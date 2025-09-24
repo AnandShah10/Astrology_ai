@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UserProfile
+from .models import UserProfile,TarotCard
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -20,15 +20,24 @@ class TimeRangeSerializer(serializers.Serializer):
 
 class PanchangSerializer(serializers.Serializer):
     tithi = serializers.CharField()
+    paksha = serializers.CharField()
     nakshatra = serializers.CharField()
     yoga = serializers.CharField()
     karana = serializers.CharField()
-    weekday = serializers.CharField()
+    vara = serializers.CharField()
     sunrise = serializers.CharField()
     sunset = serializers.CharField()
+    moonrise = serializers.CharField()
+    moonset = serializers.CharField()
     rahu_kaal = serializers.CharField()
     gulika_kaal = serializers.CharField()
     yamaganda = serializers.CharField()
     abhijit_muhurta = serializers.CharField()
     choghadiya_day = TimeRangeSerializer(many=True)
     choghadiya_night = TimeRangeSerializer(many=True)
+    
+    
+class TarotCardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TarotCard
+        fields = ["id", "name", "suit", "meaning_upright", "meaning_reversed", "image"]
