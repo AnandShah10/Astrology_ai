@@ -2,58 +2,149 @@
 {% block title %}Compatibility Report | Pathdarshak AI{% endblock %}
 
 {% block content %}
+<style>
+  /* Custom styles matching the theme: mystical, attractive, responsive */
+  .compatibility-card {
+    background: linear-gradient(135deg, #1a1a2e, #16213e); /* Starry night gradient */
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+    color: #f8f9fa; /* Light text */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+  .compatibility-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://example.com/starry-bg.png') no-repeat center/cover; /* Optional starry image */
+    opacity: 0.1;
+    pointer-events: none;
+  }
+  .shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(90deg, #ffffff 0%, #a8a8a8 50%, #ffffff 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: rgba(255, 255, 255, 0.8); /* Fallback */
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .form-label {
+    color: #e0e0e0;
+    font-weight: 500;
+  }
+  .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-radius: 8px;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .form-control:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #8f94fb;
+    box-shadow: 0 0 0 0.2rem rgba(143, 148, 251, 0.25);
+  }
+  .btn-success {
+    background: linear-gradient(135deg, #4e54c8, #8f94fb);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(78, 84, 200, 0.4);
+  }
+  #compatibility-result .card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #f8f9fa;
+  }
+  #compatibility-result .progress {
+    background: rgba(255, 255, 255, 0.1);
+    height: 25px;
+    border-radius: 12px;
+  }
+  #compatibility-result .progress-bar {
+    font-weight: bold;
+  }
+  /* Responsiveness */
+  @media (max-width: 576px) {
+    .row.g-3 > div {
+      margin-bottom: 1rem;
+    }
+    h3 { font-size: 1.75rem; }
+    h5 { font-size: 1.25rem; }
+  }
+</style>
+
 <div class="container my-5">
   <div class="row justify-content-center">
-    <div class="col-md-10">
-      <div class="card shadow-lg border-0">
-        <div class="card-body">
-          <h3 class="text-center mb-4">💞 Compatibility Test</h3>
+    <div class="col-lg-10 col-md-12">
+      <div class="card border-0 compatibility-card position-relative">
+        <div class="card-body p-4 p-md-5">
+          <h3 class="text-center shimmer mb-4">💞 Compatibility Test</h3>
           
-          <!-- Compatibility Form -->
+          <!-- Compatibility Form: Improved labels, placeholders -->
           <form id="compatibility-form" class="row g-3">
-            
-            <h5 class="mt-3">Person 1</h5>
+            <h5 class="mt-3 shimmer">Person 1 Details</h5>
             <div class="col-md-4">
-              <input type="text" name="name1" class="form-control" placeholder="Full Name" required>
+              <label for="name1" class="form-label">Full Name</label>
+              <input type="text" id="name1" name="name1" class="form-control" placeholder="e.g., John Doe" required>
             </div>
             <div class="col-md-4">
-              <input type="date" name="date1" class="form-control" required>
+              <label for="date1" class="form-label">Birth Date</label>
+              <input type="date" id="date1" name="date1" class="form-control" required>
             </div>
             <div class="col-md-2">
-              <input type="time" name="time1" class="form-control" required>
+              <label for="time1" class="form-label">Birth Time</label>
+              <input type="time" id="time1" name="time1" class="form-control" required>
             </div>
             <div class="col-md-2">
-              <input type="text" name="place1" class="form-control" placeholder="Place" required>
+              <label for="place1" class="form-label">Birth Place</label>
+              <input type="text" id="place1" name="place1" class="form-control" placeholder="e.g., New York" required>
             </div>
 
-            <h5 class="mt-4">Person 2</h5>
+            <h5 class="mt-4 shimmer">Person 2 Details</h5>
             <div class="col-md-4">
-              <input type="text" name="name2" class="form-control" placeholder="Full Name" required>
+              <label for="name2" class="form-label">Full Name</label>
+              <input type="text" id="name2" name="name2" class="form-control" placeholder="e.g., Jane Smith" required>
             </div>
             <div class="col-md-4">
-              <input type="date" name="date2" class="form-control" required>
+              <label for="date2" class="form-label">Birth Date</label>
+              <input type="date" id="date2" name="date2" class="form-control" required>
             </div>
             <div class="col-md-2">
-              <input type="time" name="time2" class="form-control" required>
+              <label for="time2" class="form-label">Birth Time</label>
+              <input type="time" id="time2" name="time2" class="form-control" required>
             </div>
             <div class="col-md-2">
-              <input type="text" name="place2" class="form-control" placeholder="Place" required>
+              <label for="place2" class="form-label">Birth Place</label>
+              <input type="text" id="place2" name="place2" class="form-control" placeholder="e.g., Los Angeles" required>
             </div>
 
             <div class="col-12 text-center mt-4">
-              <button type="submit" class="btn btn-success px-5">Check Compatibility</button>
+              <button type="submit" class="btn btn-success px-5">Check Compatibility ✨</button>
             </div>
           </form>
 
-          <!-- Loader -->
+          <!-- Loader: Enhanced with shimmer-like animation if desired -->
           <div id="compatibility-loader" class="text-center my-4" style="display:none;">
             <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
               <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-2 text-dark">🔮 Calculating compatibility...</p>
+            <p class="mt-2">🔮 Calculating cosmic compatibility...</p>
           </div>
 
-          <!-- Result -->
+          <!-- Result: Will be populated by JS -->
           <div id="compatibility-result" class="mt-5"></div>
         </div>
       </div>
@@ -63,23 +154,24 @@
 
 <script>
 function formatCompatibility(text) {
-  const sections = { love: "", career: "", emotional: "", longterm: "", score: "" };
+  // Normalize text: remove extra spaces, handle markdown
+  text = text.replace(/\r\n/g, '\n').trim();
 
-  // Split into lines
-  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  // Extract sections using more flexible matching
+  const sections = {
+    love: extractSection(text, /1\.\s*Love & Relationship/i, /2\.\s*Career\/Partnership/i),
+    career: extractSection(text, /2\.\s*Career\/Partnership/i, /3\.\s*Emotional Connection/i),
+    emotional: extractSection(text, /3\.\s*Emotional Connection/i, /4\.\s*Long-term Potential/i),
+    longterm: extractSection(text, /4\.\s*Long-term Potential/i, /Overall Compatibility Score/i),
+    score: extractSection(text, /Overall Compatibility Score/i, /$/),
+  };
 
-  lines.forEach(line => {
-    const lower = line.toLowerCase();
-    if (lower.includes("love") || lower.includes("relationship")) sections.love += line + "\n";
-    else if (lower.includes("career") || lower.includes("partnership") || lower.includes("professional")) sections.career += line + "\n";
-    else if (lower.includes("emotional")) sections.emotional += line + "\n";
-    else if (lower.includes("long-term") || lower.includes("future") || lower.includes("potential")) sections.longterm += line + "\n";
-    else if (lower.includes("compatibility") || lower.includes("overall")) sections.score += line + "\n";
-  });
+  // Extract snapshot if present (optional)
+  const snapshot = extractSection(text, /Astrological Snapshot:/i, /Compatibility Analysis:/i);
 
-  // Extract numeric score
+  // Extract numeric score from score section
   let scoreValue = 0;
-  const scoreMatch = sections.score.match(/(\d+)%/);
+  const scoreMatch = (sections.score || '').match(/(\d+)%/);
   if (scoreMatch) scoreValue = parseInt(scoreMatch[1], 10);
 
   // Determine progress bar color
@@ -87,56 +179,71 @@ function formatCompatibility(text) {
   if (scoreValue >= 70) barClass = "bg-success";
   else if (scoreValue >= 40) barClass = "bg-warning text-dark";
 
+  function extractSection(text, startRegex, endRegex) {
+    const startMatch = text.match(startRegex);
+    if (!startMatch) return '';
+    const startIndex = startMatch.index + startMatch[0].length;
+    const endMatch = text.slice(startIndex).match(endRegex);
+    const endIndex = endMatch ? endMatch.index : text.length - startIndex;
+    return text.slice(startIndex, startIndex + endIndex).trim();
+  }
+
   function formatText(t) {
-    if (!t) return "No details provided.";
+    if (!t) return '<p>No specific insights available for this section.</p>';
     return t
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // bold
-      .replace(/^\*\s(.*)/gm, "<li>$1</li>")            // bullets
-      .replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>")       // wrap bullets in <ul>
+      .replace(/^\*\s+(.*)/gm, "<li>$1</li>")           // bullets (including sub-bullets)
+      .replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>")       // wrap in ul
+      .replace(/\n\n/g, "</p><p>")                      // paragraphs
       .replace(/\n/g, "<br>");                          // line breaks
   }
 
-  // Fallback if parsing fails
-  if (Object.values(sections).filter(s => s).length <= 1) {
-    return `<div class="card border-0 shadow bg-light">
-              <div class="card-body">
-                <h5 class="card-title">🔮 Compatibility Report</h5>
-                <div class="compatibility-text">${formatText(text)}</div>
-              </div>
-            </div>`;
+  let html = '';
+
+  // Add Snapshot if present
+  if (snapshot) {
+    html += `
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title shimmer">🌟 Astrological Snapshot</h5>
+          <div class="compatibility-text"><p>${formatText(snapshot)}</p></div>
+        </div>
+      </div>
+    `;
   }
 
-  return `
+  // Always render the fixed sections, even if empty
+  html += `
     <div class="row">
       <div class="col-12 mb-3">
-        <div class="card border-0 shadow bg-light"><div class="card-body">
-          <h5 class="card-title">💞 Love & Relationship</h5>
-          <div class="compatibility-text">${formatText(sections.love)}</div>
+        <div class="card"><div class="card-body">
+          <h5 class="card-title shimmer">💞 Love & Relationship</h5>
+          <div class="compatibility-text"><p>${formatText(sections.love)}</p></div>
         </div></div>
       </div>
       <div class="col-12 mb-3">
-        <div class="card border-0 shadow bg-light"><div class="card-body">
-          <h5 class="card-title">💼 Career & Partnership</h5>
-          <div class="compatibility-text">${formatText(sections.career)}</div>
+        <div class="card"><div class="card-body">
+          <h5 class="card-title shimmer">💼 Career/Partnership</h5>
+          <div class="compatibility-text"><p>${formatText(sections.career)}</p></div>
         </div></div>
       </div>
       <div class="col-12 mb-3">
-        <div class="card border-0 shadow bg-light"><div class="card-body">
-          <h5 class="card-title">🌙 Emotional Connection</h5>
-          <div class="compatibility-text">${formatText(sections.emotional)}</div>
+        <div class="card"><div class="card-body">
+          <h5 class="card-title shimmer">🌙 Emotional Connection</h5>
+          <div class="compatibility-text"><p>${formatText(sections.emotional)}</p></div>
         </div></div>
       </div>
       <div class="col-12 mb-3">
-        <div class="card border-0 shadow bg-light"><div class="card-body">
-          <h5 class="card-title">⏳ Long-term Potential</h5>
-          <div class="compatibility-text">${formatText(sections.longterm)}</div>
+        <div class="card"><div class="card-body">
+          <h5 class="card-title shimmer">⏳ Long-term Potential</h5>
+          <div class="compatibility-text"><p>${formatText(sections.longterm)}</p></div>
         </div></div>
       </div>
       <div class="col-12">
-        <div class="card border-0 shadow bg-warning">
+        <div class="card bg-warning">
           <div class="card-body text-center">
-            <h4 class="card-title">✨ Overall Compatibility</h4>
-            <p class="fw-bold fs-5">${sections.score || "Score not found"}</p>
+            <h4 class="card-title shimmer">✨ Overall Compatibility Score</h4>
+            <p class="fw-bold fs-5">${formatText(sections.score) || "Score not available"}</p>
             <div class="progress" style="height: 25px;">
               <div class="progress-bar ${barClass} fw-bold" role="progressbar"
                 style="width: ${scoreValue}%;"
@@ -149,6 +256,8 @@ function formatCompatibility(text) {
       </div>
     </div>
   `;
+
+  return html;
 }
 
 document.getElementById("compatibility-form").addEventListener("submit", async function(e) {

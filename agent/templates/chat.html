@@ -2,29 +2,230 @@
 {% block title %}Chat | Pathdarshak AI{% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
+<style>
+  /* Mystical theme styles */
+  .astro-card {
+    background: linear-gradient(135deg, #1a1a2e, #16213e); /* Starry night gradient */
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+    color: #f8f9fa; /* Light text */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+  .astro-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.1;
+    pointer-events: none;
+  }
+  .shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(90deg, #ffffff 0%, #a8a8a8 50%, #ffffff 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: rgba(255, 255, 255, 0.8); /* Fallback */
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  #chat-box {
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent for depth */
+    border-radius: 10px;
+    padding: 1rem !important;
+    scrollbar-width: thin; /* Seamless scroller: thin scrollbar */
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent; /* Pretty scrollbar color */
+  }
+  #chat-box::-webkit-scrollbar {
+    width: 6px; /* Thin for WebKit browsers */
+  }
+  #chat-box::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2); /* Subtle thumb */
+    border-radius: 10px;
+  }
+  #chat-box::-webkit-scrollbar-track {
+    background: transparent; /* Invisible track */
+  }
+  .message-bubble {
+    max-width: 75%;
+    padding: 0.75rem 1rem;
+    border-radius: 20px;
+    position: relative;
+    word-break: break-word; /* FIX: Break long words to prevent tearing */
+    overflow-wrap: break-word; /* Additional for better wrapping */
+    hyphens: auto; /* Hyphenate if needed */
+    white-space: pre-wrap; /* Preserve whitespace but wrap */
+  }
+  .user-bubble {
+    background: #4e54c8; /* User color */
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .ai-bubble {
+    background: #2c3e50; /* AI color */
+    color: #fff;
+    border-bottom-left-radius: 4px;
+  }
+  .timestamp {
+    font-size: 0.75rem;
+    color: #bbb;
+    margin-top: 0.25rem;
+  }
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin: 0 0.5rem;
+  }
+  .form-control {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-radius: 20px;
+  }
+  .form-control:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #8f94fb;
+    box-shadow: none;
+  }
+  .btn-warning {
+    background: linear-gradient(135deg, #ffc107, #ff8c00);
+    border: none;
+    border-radius: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem; /* Space for icon */
+  }
+  .btn-light.rounded-circle {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .btn-light.rounded-circle:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  #query-section .btn {
+    border-radius: 20px;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .typing-dots span {
+    animation: blink 1.5s infinite;
+    opacity: 0.3;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.3s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.6s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.3; }
+    40% { opacity: 1; }
+  }
+  /* Full width and restricted height */
+  .chat-container {
+    width: 100vw; /* Full viewport width */
+    max-width: 100%; /* No max limit */
+    padding: 0; /* No side padding */
+    margin: 0; /* No margins */
+  }
+  .astro-card {
+    max-height: 80vh; /* Restricted height (80% of viewport) */
+    height: auto; /* Allow it to be shorter if content is less */
+    overflow: hidden; /* Prevent overflow */
+  }
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1rem;
+  }
+  #chat-box {
+    flex-grow: 1;
+    overflow-y: auto;
+    min-height: 200px;
+    max-height: 50vh; /* Further restrict chat box height if needed */
+  }
+  #query-section {
+    max-height: 120px; /* Limit height on small screens */
+    overflow-y: auto;
+  }
+  @media (max-width: 576px) {
+    .astro-card {
+      border-radius: 0; /* No rounded corners on mobile for full screen feel */
+    }
+    .card-body {
+      padding: 0.75rem;
+    }
+    h3.shimmer {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .message-bubble {
+      max-width: 90%;
+      font-size: 0.9rem;
+    }
+    .avatar {
+      width: 24px;
+      height: 24px;
+    }
+    .timestamp {
+      font-size: 0.65rem;
+    }
+    #chat-form button {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.9rem;
+    }
+    #voice-btn {
+      width: 40px;
+      height: 40px;
+    }
+    #query-section h6 {
+      font-size: 0.9rem;
+    }
+    #query-section .btn-sm {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.5rem;
+    }
+  }
+  @media (max-height: 500px) {
+    #query-section {
+      display: none; /* Hide quick questions on very small heights to save space */
+    }
+    #chat-box {
+      min-height: 150px;
+    }
+  }
+</style>
+
+<div class="chat-container">
+  <div class="row">
+    <div class="col-12">
       <div class="card shadow-lg border-0 astro-card">
-        <div class="card-body d-flex flex-column" style="height: 75vh;">
-          <h3 class="text-center shimmer">🔮 Ask Pathdarshak AI</h3>
+        <div class="card-body">
+          {% comment %} <h3 class="text-center shimmer mb-3">🔮 Ask  AI</h3> {% endcomment %}
           
           <!-- Chat Messages -->
-          <div id="chat-box" class="flex-grow-1 overflow-auto mb-3 p-3 bg-dark rounded" style="min-height:200px;">
+          <div id="chat-box" class="mb-3">
             <!-- Messages will appear here -->
           </div>         
           
           <!-- Chat Input -->
-          <form id="chat-form" class="d-flex">
+          <form id="chat-form" class="d-flex align-items-center mb-3">
             <input type="text" id="chat-input" class="form-control me-2" placeholder="Type your question..." required>
-             <!-- Voice Button -->
-            <button type="button" id="voice-btn" class="btn btn-light rounded-circle" style="width:45px;height:45px;">
-              <i class="bi bi-mic" id='voice-icon'></i>
+            <!-- Voice Button -->
+            <button type="button" id="voice-btn" class="btn btn-primary rounded-circle me-2" style="width:45px;height:45px;">
+              <i class="bi bi-mic" id="voice-icon"></i>
             </button>
-            <button type="submit" class="btn btn-warning">Send</button>
+            <button type="submit" class="btn btn-success rounded-circle me-2" style="width:45px;height:45px;"><i class="bi bi-send"></i></button>
           </form>
-           <div id="query-section" style="overflow:auto;" class="mb-3">
-            <h6 class="text-muted">Quick Questions:</h6>
+          
+          <!-- Quick Questions Section -->
+          <div id="query-section" class="overflow-auto">
+            <h6 class="text-light mb-2">Quick Questions:</h6>
             <div class="d-flex flex-wrap gap-2" id="predefined-queries"></div>
           </div>
         </div>
@@ -42,25 +243,39 @@ document.addEventListener("DOMContentLoaded", function () {
   const voiceBtn = document.getElementById("voice-btn");
   const micIcon = document.getElementById("voice-icon");
 
-  // -------------------
   // Predefined Queries
-  // -------------------
   const predefinedQueries = {
-    "Daily": ["What does my horoscope say for today?","How will this week go for me?","Give me predictions for this month."],
-    "Love": ["Will I find true love this year?","Is my partner compatible with me?","How will my marriage life be?"],
-    "Career": ["Will I get a promotion this year?","Is this a good time to change jobs?","What career path suits my horoscope?"],
-    "Health": ["What does my horoscope say about my health?","Am I prone to stress or anxiety?","Which period should I be cautious about health?"]
+    Daily: [
+      "What does my horoscope say for today?",
+      "How will this week go for me?",
+      "Give me predictions for this month."
+    ],
+    Love: [
+      "Will I find true love this year?",
+      "Is my partner compatible with me?",
+      "How will my marriage life be?"
+    ],
+    Career: [
+      "Will I get a promotion this year?",
+      "Is this a good time to change jobs?",
+      "What career path suits my horoscope?"
+    ],
+    Health: [
+      "What does my horoscope say about my health?",
+      "Am I prone to stress or anxiety?",
+      "Which period should I be cautious about health?"
+    ]
   };
 
-  Object.keys(predefinedQueries).forEach(category => {
-    const label = document.createElement("div");
-    label.className = "w-100 mt-2 fw-bold text-secondary";
-    label.innerText = category;
-    queryContainer.appendChild(label);
+  Object.keys(predefinedQueries).forEach((category) => {
+    const categoryLabel = document.createElement("div");
+    categoryLabel.className = "w-100 mt-2 fw-bold text-secondary";
+    categoryLabel.innerText = category;
+    queryContainer.appendChild(categoryLabel);
 
-    predefinedQueries[category].forEach(q => {
+    predefinedQueries[category].forEach((q) => {
       const btn = document.createElement("button");
-      btn.className = "btn btn-outline-dark btn-sm rounded-pill";
+      btn.className = "btn btn-outline-light btn-sm rounded-pill me-2 mb-2";
       btn.innerText = q;
       btn.onclick = (e) => {
         e.preventDefault();
@@ -71,16 +286,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // -------------------
   // Chat Submission (Text)
-  // -------------------
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const message = input.value.trim();
     if (!message) return;
 
-    addUserBubble(message);
+    addMessage('user', message);
     input.value = "";
+
+    addTypingIndicator();
 
     const response = await fetch("{% url 'chat_api' %}", {
       method: "POST",
@@ -92,103 +307,165 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const data = await response.json();
-    addAIBubble(data.reply);
+    removeTypingIndicator();
+    addMessage('ai', data.reply);
 
     if (data.audio) {
       playAudio(data.audio);
     }
   });
 
-   // -------------------
-  // Voice via WebSocket
-  // -------------------
+  // WebSocket for Voice
   const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
   const wsPath = `${wsScheme}://${window.location.host}/ws/voice/`;
   const ws = new WebSocket(wsPath);
 
+  let aiBubbleEl = null;
+  let transcriptEl = null;
+
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    console.log(data)
-    if (data.transcript) addUserBubble(data.transcript); // partial transcript
-    if (data.reply) addAIBubble(data.reply);             // AI text
-    if (data.audio) playAudio(data.audio); 
+
+    // Live transcript for user voice
+    if (data.transcript) {
+      if (!transcriptEl) {
+        transcriptEl = addMessage('user', '', true); // Placeholder for live transcript
+      }
+      transcriptEl.querySelector('.message-bubble').innerHTML = formatText(data.transcript);
+    }
+
+    // Partial AI reply
+    if (data.partial_reply) {
+      if (!aiBubbleEl) {
+        removeTypingIndicator();
+        aiBubbleEl = addMessage('ai', '', true); // Placeholder for streaming
+      }
+      aiBubbleEl.querySelector('.message-bubble').innerHTML += formatText(data.partial_reply);
+      scrollToBottom();
+    }
+
+    // Final AI reply
+    if (data.reply) {
+      removeTypingIndicator();
+      addMessage('ai', data.reply);
+    }
+
+    // Audio chunk
+    if (data.audio_chunk) {
+      playAudio(data.audio_chunk);
+    }
   };
 
+  // Voice Recording
   let mediaRecorder;
   function startRecording() {
-          console.log("Recording Started...........................")
-
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
-          console.log(event.data,'--------------------------------------')
           ws.send(event.data);
         }
       };
 
-      mediaRecorder.start(250); // send chunks every 250ms
+      mediaRecorder.start(250); // Send chunks every 250ms
 
       micIcon.classList.remove("bi-mic");
       micIcon.classList.add("bi-mic-fill");
       voiceBtn.classList.add("btn-danger");
-    });
+      addTypingIndicator(); // Show typing while processing voice
+    }).catch(err => console.error("Microphone access denied", err));
   }
 
   function stopRecording() {
-    console.log("Recording stopped ....................................")
-    if (!mediaRecorder) return;
-    mediaRecorder.stop();
-
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
     micIcon.classList.remove("bi-mic-fill");
     micIcon.classList.add("bi-mic");
     voiceBtn.classList.remove("btn-danger");
-
-    // Tell backend recording is done
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ "action": "stop" }));
-    }
   }
 
-  // Desktop events
   voiceBtn.addEventListener("mousedown", startRecording);
   voiceBtn.addEventListener("mouseup", stopRecording);
-
-  // Mobile touch events
   voiceBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startRecording(); });
   voiceBtn.addEventListener("touchend", (e) => { e.preventDefault(); stopRecording(); });
 
-  // -------------------
   // Helper Functions
-  // -------------------
-  function addUserBubble(message) {
-    chatBox.innerHTML += `
-      <div class="d-flex justify-content-end mb-2">
-        <div class="p-2 bg-primary text-white rounded" style="max-width:70%;">${message}</div>
-      </div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
+  function addMessage(sender, message, placeholder = false) {
+    const wrapper = document.createElement("div");
+    wrapper.className = `d-flex mb-3 ${sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`;
+
+    const avatar = document.createElement("img");
+    avatar.className = "avatar";
+    avatar.src = sender === 'user' ? 'https://via.placeholder.com/32?text=U' : 'https://via.placeholder.com/32?text=AI'; // Online placeholders
+    avatar.alt = sender === 'user' ? 'User' : 'AI';
+
+    const bubble = document.createElement("div");
+    bubble.className = `message-bubble ${sender === 'user' ? 'user-bubble' : 'ai-bubble'}`;
+    bubble.innerHTML = formatText(message);
+
+    const time = document.createElement("div");
+    time.className = `timestamp ${sender === 'user' ? 'text-end' : 'text-start'}`;
+    time.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const content = document.createElement("div");
+    content.className = "d-flex flex-column";
+    content.appendChild(bubble);
+    content.appendChild(time);
+
+    if (sender === 'user') {
+      wrapper.appendChild(content);
+      wrapper.appendChild(avatar);
+    } else {
+      wrapper.appendChild(avatar);
+      wrapper.appendChild(content);
+    }
+
+    chatBox.appendChild(wrapper);
+    scrollToBottom();
+
+    return placeholder ? wrapper : null;
   }
 
-  function addAIBubble(reply) {
-    let formatted = reply
+  let typingIndicator = null;
+  function addTypingIndicator() {
+    if (typingIndicator) return;
+    typingIndicator = document.createElement("div");
+    typingIndicator.className = "d-flex justify-content-start mb-3";
+    typingIndicator.innerHTML = `
+      <img src="https://via.placeholder.com/32?text=AI" class="avatar" alt="AI">
+      <div class="message-bubble ai-bubble">
+        <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+      </div>
+    `;
+    chatBox.appendChild(typingIndicator);
+    scrollToBottom();
+  }
+
+  function removeTypingIndicator() {
+    if (typingIndicator) {
+      typingIndicator.remove();
+      typingIndicator = null;
+    }
+  }
+
+  function formatText(text) {
+    return text
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/\n/g, "<br>")
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-
-    chatBox.innerHTML += `
-      <div class="d-flex justify-content-start mb-2">
-        <div class="p-2 bg-success text-white rounded" style="max-width:70%;">${formatted}</div>
-      </div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
   }
 
   function playAudio(base64Audio) {
-    const audio = new Audio("data:audio/mp3;base64," + base64Audio);
-    console.log(audio)
-    audio.play();
+    const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+    audio.play().catch(err => console.error("Audio playback failed", err));
+  }
+
+  function scrollToBottom() {
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
 });
 </script>
