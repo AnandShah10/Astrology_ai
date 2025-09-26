@@ -1,44 +1,224 @@
 {% extends "base.html" %}
-{% block title %}Kundali Chart{% endblock %}
+{% block title %}Kundali Chart | Pathdarshak AI{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <h2 class="mb-4 text-center">North-Indian Style Kundali</h2>
+<style>
+  /* Custom styles: mystical, attractive, responsive */
+  .kundali-container {
+    background: linear-gradient(135deg, #1a1a2e, #16213e); /* Starry night gradient */
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+    color: #f8f9fa; /* Light text */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+  }
+  .kundali-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://example.com/starry-bg.png') no-repeat center/cover; /* Optional starry image */
+    opacity: 0.1;
+    pointer-events: none;
+  }
+  .shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(90deg, #ffffff 0%, #a8a8a8 50%, #ffffff 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: rgba(255, 255, 255, 0.8); /* Fallback */
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .section-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .table {
+    color: #f8f9fa !important; /* Force light text in tables */
+  }
+  .table th, .table td {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f8f9fa !important; /* Ensure table text is visible */
+  }
+  .list-group-item {
+    background: transparent !important;
+    color: #f8f9fa !important; /* Light text for lists */
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .text-muted {
+    color: #d0d0d0 !important; /* Lighter muted text for visibility */
+  }
+  .img-chart {
+    max-width: 70%; /* Slightly bigger (from ~60% implicit to 70%) */
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+  .btn-secondary {
+    background: linear-gradient(135deg, #4e54c8, #8f94fb);
+    border: none;
+    transition: transform 0.2s;
+  }
+  .btn-secondary:hover {
+    transform: scale(1.05);
+  }
+  /* Full page adjustments */
+  body {
+    background: #16213e; /* Dark background for whole page */
+  }
+  /* Responsiveness */
+  @media (max-width: 768px) {
+    .kundali-container {
+      padding: 1rem;
+      border-radius: 0; /* Full screen feel on mobile */
+    }
+    .section-card {
+      padding: 1rem;
+    }
+    h2 { font-size: 1.75rem; }
+    h5 { font-size: 1.25rem; }
+    .row > div.mb-3 {
+      margin-bottom: 1rem !important;
+    }
+    .img-chart {
+      max-width: 100%; /* Full width on small screens for visibility */
+    }
+  }
+</style>
 
-  <!-- Ascendant -->
-  <div class="text-center mb-3">
-    <h5>Ascendant (Lagna): {{ ascendant|floatformat:2 }}°</h5>
-  </div>
+<div class="container-fluid py-4"> <!-- Full width with fluid, minimal padding -->
+  <div class="row justify-content-center">
+    <div class="col-12"> <!-- Full width column -->
+      <div class="kundali-container position-relative">
+        <!-- Charts -->
+        <div class="section-card mb-4">
+          <h5 class="shimmer mb-3 text-center">Kundali & Navamsa Charts</h5>
+          <div class="row justify-content-center">
+            <div class="col-md-6 mb-3 mb-md-0 text-center">
+              <img src="data:image/png;base64,{{ kundali_chart }}" class="img-chart" alt="Kundali Chart">
+              <p class="mt-2 fw-bold">Lagna/Birth Chart</p>
+            </div>
+            <div class="col-md-6 text-center">
+              <img src="data:image/png;base64,{{ navamsa_chart }}" class="img-chart" alt="Navamsa Chart">
+              <p class="mt-2 fw-bold">Navamsa Chart</p>
+            </div>
+          </div>
+        </div>
 
-  <!-- Kundali Chart -->
-  <div class="text-center mb-4">
-    <img src="data:image/png;base64,{{ kundali_chart }}" class="img-fluid border rounded shadow">
-  </div>
+        <!-- Avakhada Chakra -->
+        <div class="section-card mb-4">
+          <h5 class="shimmer mb-3">Avakhada Chakra</h5>
+          <div class="row">
+            <div class="col-md-6">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Weekday:</strong> {{ avakhada.weekday }}</li>
+                <li class="list-group-item"><strong>Lagna:</strong> {{ avakhada.lagna }}</li>
+                <li class="list-group-item"><strong>Moon Sign:</strong> {{ avakhada.moon_sign }}</li>
+                <li class="list-group-item"><strong>Moon Nakshatra:</strong> {{ avakhada.moon_nakshatra }}</li>
+                <li class="list-group-item"><strong>Moon Pada:</strong> {{ avakhada.moon_pada }}</li>
+                <li class="list-group-item"><strong>Tithi:</strong> {{ avakhada.tithi }}</li>
+                <li class="list-group-item"><strong>Karana:</strong> {{ avakhada.karana }}</li>
+                <li class="list-group-item"><strong>Yoga:</strong> {{ avakhada.yoga }}</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>Latitude:</strong> {{ avakhada.lat }}</li>
+                <li class="list-group-item"><strong>Longitude:</strong> {{ avakhada.lon }}</li>
+                <li class="list-group-item"><strong>Date of Birth:</strong> {{ avakhada.dob }}</li>
+                <li class="list-group-item"><strong>Time of Birth:</strong> {{ avakhada.tob }}</li>
+                <li class="list-group-item"><strong>Varna:</strong> {{ avakhada.varna }}</li>
+                <li class="list-group-item"><strong>Vashya:</strong> {{ avakhada.vashya }}</li>
+                <li class="list-group-item"><strong>Yoni:</strong> {{ avakhada.yoni }}</li>
+                <li class="list-group-item"><strong>Gana:</strong> {{ avakhada.gana }}</li>
+                <li class="list-group-item"><strong>Nadi:</strong> {{ avakhada.nadi }}</li>
+                <li class="list-group-item"><strong>Sign:</strong> {{ avakhada.sign }}</li>
+                <li class="list-group-item"><strong>Sign Lord:</strong> {{ avakhada.sign_lord }}</li>
+                <li class="list-group-item"><strong>Paya:</strong> {{ avakhada.paya }}</li>
+                <li class="list-group-item"><strong>Tatva:</strong> {{ avakhada.tatva }}</li>
+                <li class="list-group-item"><strong>Yujna:</strong> {{ avakhada.yujna }}</li>
+                <li class="list-group-item"><strong>Name Alphabet:</strong> {{ avakhada.name_alphabet }}</li>
+                <li class="list-group-item"><strong>Nakshatra Deity:</strong> {{ avakhada.nak_deity }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
-  <!-- Houses with Planets & Signs -->
-  <div class="row mt-4">
-    <h5 class="mb-3">Houses & Planets</h5>
-    {% for house, planets in house_planets.items %}
-  <div class="col-md-3 mb-3">
-    <div class="p-3 bg-dark text-light rounded-3 shadow-sm">
-      <h6 class="text-warning">House {{ house }} - {{ house_signs.house }}</h6>
-      {% if planets %}
-        <ul class="mb-0">
-          {% for pl in planets %}
-            <li>{{ pl }}</li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="mb-0 text-muted">No planets</p>
-      {% endif %}
+        <!-- Planet Positions -->
+        <div class="section-card mb-4">
+          <h5 class="shimmer mb-3">Planet Positions</h5>
+          <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>Planet</th>
+                  <th>Degree</th>
+                  <th>Sign</th>
+                  <th>Nakshatra</th>
+                  <th>Avastha</th>
+                  <th>Relation</th>
+                  <th>Pada</th>
+                  <th>Retrograde</th>
+                  <th>Combust</th>
+                  <th>Sign Lord</th>
+                  <th>Nakshatra Lord</th>
+                  <th>House</th>
+                  <th>Karaka</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Ascendant</td>
+                  <td>{{ ascendant.degree|floatformat:2 }}°</td>
+                  <td>{{ ascendant.sign }}</td>
+                  <td>{{ ascendant.nakshatra }}</td>
+                  <td>{{ ascendant.avastha }}</td>
+                  <td>{{ ascendant.relation }}</td>
+                  <td>{{ ascendant.pada }}</td>
+                  <td>{{ ascendant.retrograde|yesno:"Yes,No" }}</td>
+                  <td>{{ ascendant.combust|yesno:"Yes,No" }}</td>
+                  <td>{{ ascendant.sign_lord }}</td>
+                  <td>{{ ascendant.nakshatra_lord }}</td>
+                  <td>1</td>
+                  <td>--</td>
+                </tr>
+                {% for planet, details in planet_positions.items %}
+                <tr>
+                  <td>{{ planet }}</td>
+                  <td>{{ details.degree|floatformat:2 }}°</td>
+                  <td>{{ details.sign }}</td>
+                  <td>{{ details.nakshatra }}</td>
+                  <td>{{ details.avastha }}</td>
+                  <td>{{ details.relation }}</td>
+                  <td>{{ details.pada }}</td>
+                  <td>{{ details.retro|yesno:"Yes,No" }}</td>
+                  <td>{{ details.combust|yesno:"Yes,No" }}</td>
+                  <td>{{ details.sign_lord }}</td>
+                  <td>{{ details.nak_lord }}</td>
+                  <td>{{  details.house }}</td>
+                  <td>{{ details.karaka }}</td>                 
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="text-center mt-4">
+          <a href="{% url 'kundali' %}" class="btn btn-secondary px-5">🔄 Try Again</a>
+        </div>
+      </div>
     </div>
-  </div>
-{% endfor %}
-
-  </div>
-
-  <div class="mt-4 text-center">
-    <a href="{% url 'kundali' %}" class="btn btn-secondary">🔄 Try Again</a>
   </div>
 </div>
 {% endblock %}

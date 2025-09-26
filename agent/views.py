@@ -56,13 +56,8 @@ def geocode_place_timezone(place_name: str):
         location = geolocator.geocode(place_name)
         if location:
             lat,lon = float(location.latitude),float(location.longitude)
-            print(".....",lat,lon)
-            # tzwhere_obj = tzwhere.tzwhere()
-            # timezone_str = tzwhere_obj.tzNameAt(lat, lon)
-            # print(timezone_str)
             tf = TimezoneFinder()
             timezone_str = tf.timezone_at(lng=77.2090, lat=28.6139)
-            print(timezone_str)  # Asia/Kolkata
             if timezone_str:
                 tz = pytz.timezone(timezone_str)
                 return lat, lon, tz
@@ -81,21 +76,15 @@ def chat_api(request):
         is_voice = False
         # Handle audio input if present (multipart/form-data)
         if 'audio' in request.FILES:
-            print(request.FILES)
             is_voice = True
             audio_file = request.FILES['audio']
-            # Read audio content in memory
             audio_content = audio_file.read()
-            print("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL")
             segments, info = whisperModel.transcribe(io.BytesIO(audio_content))
-            print(segments)
             try:
                 message = " ".join([seg.text.strip() for seg in segments])
             except Exception as e:
                 return JsonResponse({"error": "Empty message"}, status=400)
-            print(message)
         else:
-        # Parse JSON efficiently
             data = json.loads(request.body)
             message = data.get("message", "").strip()
         if not message:
@@ -104,11 +93,9 @@ def chat_api(request):
         # Cache user profile to reduce DB queries
         cache_key = f"user_profile_{request.user.id}"
         profile = cache.get(cache_key)
-        print("Cached Profile.....",profile)
         if not profile:
             profile = request.user.userprofile
-            print(profile)# Assumes UserProfile is related to User
-            cache.set(cache_key, profile, timeout=3600)  # Cache for 1 hour
+            cache.set(cache_key, profile, timeout=3600)
 
         # System prompt with user birth details
         system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
@@ -125,10 +112,8 @@ def chat_api(request):
         if not chat_history:
             chat_history = [{"role": "model", "parts": [{"text": system_prompt}]}]
 
-        # Add user message
         chat_history.append({"role": "user", "parts": [{"text": message}]})
 
-        # Generate AI response
         # response = MODEL.generate_content(contents=chat_history[-20:])  # Limit history to last 20 messages
         
         chat = MODEL.start_chat(history=chat_history)
@@ -139,7 +124,6 @@ def chat_api(request):
             reply += chunk.text
         # reply = response.text
 
-        # Add assistant's response
         chat_history.append({"role": "model", "parts": [{"text": reply}]})
 
         # Store only the last 20 messages in session
@@ -147,18 +131,16 @@ def chat_api(request):
         request.session.modified = True  # Ensure session is saved
         audio_base64 = None
         if is_voice:
-            print("is_voice",is_voice)
             audio_base64 = None
             tts = gTTS(reply, lang="en")
             audio_buffer = io.BytesIO()
             tts.write_to_fp(audio_buffer)
             audio_buffer.seek(0)
-            print(audio_buffer)
             audio_base64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
             
             return JsonResponse({
                 "reply": reply,
-                "audio": audio_base64 if is_voice else None  # Send audio only if voice input
+                "audio": audio_base64 if is_voice else None
             })
         else:
             return JsonResponse({"reply": reply})
@@ -178,7 +160,6 @@ def terms(request):
 
 def chat(request):
     chat_history = request.session.get("chat_history", [])
-    # print(chat_history)
     return render(request,'chat.html',{"chat_history":chat_history})
 
 def horoscope(request):
@@ -201,7 +182,6 @@ def panchang_view(request):
         mi = datetime.now().minute
 
         result = get_panchang(y, m, d, h, mi, lat, lon, offset_tz)
-        print(result)
     return render(request, "panchang.html", {"result": result})
 
 @login_required
@@ -218,7 +198,6 @@ def kundali(request):
         now = datetime.now(tz)
         offset_tz = float(now.utcoffset().total_seconds() / 3600)
         result = get_kundali_chart(year,month,day,hour,minute,lat,lon,offset_tz)
-        print(result)
         return render(request,'kundali_result.html',result)
     else:
         return render(request,'kundali_form.html')
@@ -226,14 +205,10 @@ def kundali(request):
 @csrf_exempt
 def compatibility(request):
     if request.method == 'POST':
-        print(request.body)
         req = json.loads(request.body.decode('utf-8'))
-        print(req)
         person1,person2 = req.get('person1'),req.get('person2')
-        print(person1,person2)
         # res=compatibility_report(person1,person2)
         result = compatibility_report(person1,person2)
-        print(result)
         data = {"text":result}
         return JsonResponse(data)
     else:
@@ -242,14 +217,10 @@ def compatibility(request):
 @csrf_exempt    
 def kundali_matching(request):
     if request.method == 'POST':
-        print(request.body)
         req = json.loads(request.body.decode('utf-8'))
-        print(req)
         person1,person2 = req.get('person1'),req.get('person2')
-        print(person1,person2)
         # res=compatibility_report(person1,person2)
         result = perform_kundali_matching(person1,person2)
-        print(result)
         return JsonResponse(result)
     return render(request,'kundali_matching_form.html')
     
@@ -274,7 +245,6 @@ def bazi_view(request):
 @login_required
 def edit_profile(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
-    print(profile)
     if request.method == "POST":
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
@@ -282,7 +252,6 @@ def edit_profile(request):
             # Geocode the place into lat/lng
             if profile.birth_place:
                 lat, lng, tz = geocode_place_timezone(profile.birth_place)
-                print(lat,lng,tz)
                 if lat and lng:
                     profile.birth_lat = lat
                     profile.birth_lng = lng
@@ -292,20 +261,17 @@ def edit_profile(request):
 
     else:
         form = UserProfileForm(instance=profile)
-        print(form)
         return render(request, "profile_form.html", {"form": form})
 
 """For signing up user"""
 def signup(request):
     if request.method == "POST":
         form = CustomSignupForm(request.POST)
-        print(form.is_valid())
         if form.is_valid():
             user = form.save()
             login(request,user)
             return redirect('save_profile')
         else:
-            # Debug: print form errors so you can see why signup fails
             print("Form errors:", form.errors.as_json())
             return render(request, 'signup.html', {"form": form})
     else:

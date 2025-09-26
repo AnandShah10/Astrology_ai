@@ -1,44 +1,94 @@
 {% extends "base.html" %}
-{% block title %}Kundali Generator{% endblock %}
+{% block title %}Kundali Generator | Astro AI{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-  <h2 class="mb-4 text-center">Enter Birth Details</h2>
-  <form method="post">
-    {% csrf_token %}
-    <div class="row g-3">
-      <div class="col-md-3">
-        <label>Year</label>
-        <input type="number" name="year" class="form-control" required>
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8 col-sm-10">
+
+      <!-- Card -->
+      <div class="card shadow-lg border-0 rounded-4 p-4" style="background-color: rgba(10,10,25,0.85);">
+        <div class="text-center mb-4">
+          <h2 class="text-warning fw-bold shimmer">🪐 Kundali Generator</h2>
+          <p class="text-light">Enter your birth details to explore your astrological chart</p>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-6 col-md-3">
+              <label class="form-label text-light">Year</label>
+              <input type="number" name="year" class="form-control form-control-dark" required>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label text-light">Month</label>
+              <input type="number" name="month" class="form-control form-control-dark" required>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label text-light">Day</label>
+              <input type="number" name="day" class="form-control form-control-dark" required>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label text-light">Hour</label>
+              <input type="number" name="hour" class="form-control form-control-dark" required>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label text-light">Minute</label>
+              <input type="number" name="minute" class="form-control form-control-dark" required>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label text-light">Second</label>
+              <input type="number" name="second" class="form-control form-control-dark" required>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label text-light">Birth Place</label>
+              <input type="text" name="place" class="form-control form-control-dark" placeholder="City, Country" required>
+            </div>
+          </div>
+
+          <div class="text-center mt-4">
+            <button type="submit" class="btn btn-warning px-5 py-2 fw-bold">🔮 Generate</button>
+          </div>
+        </form>
       </div>
-      <div class="col-md-3">
-        <label>Month</label>
-        <input type="number" name="month" class="form-control" required>
-      </div>
-      <div class="col-md-3">
-        <label>Day</label>
-        <input type="number" name="day" class="form-control" required>
-      </div>
-      <div class="col-md-3">
-        <label>Hour (24h)</label>
-        <input type="number" name="hour" class="form-control" required>
-      </div>
-      <div class="col-md-3">
-        <label>Minute</label>
-        <input type="number" name="minute" class="form-control" required>
-      </div>
-      <div class="col-md-3">
-        <label>Seconds</label>
-        <input type="number" name="second" class="form-control" required>
-      </div>
-      <div class="col-md-3">
-        <label>Birth Place</label>
-        <input type="text" name="place" class="form-control" required>
-      </div>
+
     </div>
-    <div class="mt-4 text-center">
-      <button type="submit" class="btn btn-primary">Generate Kundali</button>
-    </div>
-  </form>
+  </div>
 </div>
+
+<style>
+/* Dark input */
+.form-control-dark {
+  background-color: rgba(255,255,255,0.05);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  transition: 0.3s;
+}
+.form-control-dark:focus {
+  border-color: #ffc107;
+  box-shadow: 0 0 8px rgba(255,193,7,0.5);
+  background-color: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+/* Shimmer header effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #fff, #ffc107, #fff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip:text;
+  {% comment %} -webkit-text-fill-color: transparent; {% endcomment %}
+  animation: shimmer 3s infinite;
+}
+
+/* Card responsive */
+@media(max-width:576px){
+  .col-md-3, .col-md-6 { flex: 0 0 100%; max-width: 100%; }
+}
+</style>
 {% endblock %}

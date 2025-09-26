@@ -18,6 +18,8 @@ class UserProfile(models.Model):
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    
+    gender = models.CharField(default='male',choices=[('male','Male'),('female','Female'),('other','Other')])
 
     # Astrology fields
     birth_date = models.DateField(null=True, blank=True)
@@ -37,7 +39,7 @@ class UserProfile(models.Model):
 
 class TarotCard(models.Model):
     name = models.CharField(max_length=100)
-    suit = models.CharField(max_length=50)  # Major Arcana, Wands, Cups, Swords, Pentacles
+    suit = models.CharField(max_length=50)
     meaning_upright = models.TextField()
     meaning_reversed = models.TextField()
     image = models.ImageField(upload_to="tarot/")
