@@ -5,10 +5,10 @@ from rest_framework.response import Response
 from rest_framework import generics
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
-from .models import UserProfile
+from .models import UserProfile,TarotCard
 from .serializers import UserProfileSerializer,PanchangSerializer
 from datetime import date,datetime
-import os
+import os,base64,json,io,random
 from google.generativeai import GenerativeModel, configure
 from dotenv import load_dotenv
 from .utils.kundali import get_kundali_chart
@@ -17,6 +17,11 @@ from .utils.kundali_matching import perform_kundali_matching
 from .utils.chinese_zodiac import generate_bazi
 from .views import geocode_place_timezone
 from .utils.panchang import get_panchang
+from gtts import gTTS
+from faster_whisper import WhisperModel
+from .utils.tarot import get_ai_interpretation,load_cards
+load_cards()
+whisperModel = WhisperModel("base")
 SYSTEM_PROMPT_TEMPLATE = (
     "You are Astro AI, a specialized assistant dedicated exclusively to astrology. "
     "Your role is to provide accurate, insightful, and engaging answers about horoscopes, "
@@ -43,7 +48,20 @@ MODEL = GenerativeModel("gemini-2.5-flash")
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def chat_api(request):
-    message = request.data.get("message", "").strip()
+    print(request.body)
+    is_voice = False
+    if 'audio' in request.FILES:
+        is_voice = True
+        audio_file = request.FILES['audio']
+        audio_content = audio_file.read()
+        segments, info = whisperModel.transcribe(io.BytesIO(audio_content))
+        try:
+                message = " ".join([seg.text.strip() for seg in segments])
+        except Exception as e:
+                return Response({"error": "Empty message"}, status=400)
+    else:
+            data = json.loads(request.body)
+            message = data.get("message", "").strip()
     if not message:
         return Response({"error": "Empty message"}, status=400)
 
@@ -77,13 +95,26 @@ def chat_api(request):
     chat_history.append({"role": "model", "parts": [{"text": reply}]})
     request.session["chat_history"] = chat_history[-20:]
     request.session.modified = True
-
-    return Response({"reply": reply})
+    audio_base64 = None
+    if is_voice:
+        audio_base64 = None
+        tts = gTTS(reply, lang="en")
+        audio_buffer = io.BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+        audio_base64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
+            
+        return Response({
+                "reply": reply,
+                "audio": audio_base64 if is_voice else None
+            })
+    else:
+        return Response({"reply": reply})
 
 # ==================== Panchang API ====================
 
-@api_view(["GET"])
-@permission_classes([AllowAny])  # you can change to [IsAuthenticated] if login required
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])  # you can change to [IsAuthenticated] if login required
 def panchang_api(request):
     try:    
         year = int(date.today().year)
@@ -92,7 +123,11 @@ def panchang_api(request):
         if request.POST.get('date'):
             date_str = datetime.strptime(request.POST.get('date'),"%Y-%m-%d")
             year,month,day = date_str.year,date_str.month,date_str.day
-        lat,lon,tz = geocode_place_timezone(request.user.userprofile.birth_place)
+        if request.POST.get('place'):
+            place =request.POST.get('place')
+        else:
+            place = request.user.userprofile.birth_place
+        lat,lon,tz = geocode_place_timezone(place)
         now = datetime.now(tz)
         offset_tz = float(now.utcoffset().total_seconds() / 3600)
         h = datetime.now().hour
@@ -174,7 +209,48 @@ def bazi_api(request):
         })
     except KeyError:
         return Response({"error": "Missing parameters"}, status=400)
+    
+# ================== Tarot cards API ==================
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def draw_card(request):
+    card = random.choice(TarotCard.objects.all())
+    reversed_state = random.choice([True, False])
+    data = {
+        "name": card.name,
+        "suit": card.suit,
+        "orientation": "Reversed" if reversed_state else "Upright",
+        "meaning": card.meaning_reversed if reversed_state else card.meaning_upright,
+        "image": card.image
+    }
+    interpretation = get_ai_interpretation([data], spread_type="single card")
+    return Response({
+        "card": data,
+        "interpretation": interpretation
+    })
 
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def three_card_spread(request):
+    cards = random.sample(list(TarotCard.objects.all()), 3)
+    positions = ["Past", "Present", "Future"]
+    spread = []
+    for i, card in enumerate(cards):
+        reversed_state = random.choice([True, False])
+        spread.append({
+            "position": positions[i],
+            "name": card.name,
+            "suit": card.suit,
+            "orientation": "Reversed" if reversed_state else "Upright",
+            "meaning": card.meaning_reversed if reversed_state else card.meaning_upright,
+            "image": card.image
+        })
+    interpretation = get_ai_interpretation(spread, spread_type="3-card")
+    return Response({
+        "spread": spread,
+        "interpretation": interpretation
+    })
 
 # ==================== User Profile API ====================
 class UserProfileAPI(generics.RetrieveUpdateAPIView):
@@ -184,7 +260,6 @@ class UserProfileAPI(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user.userprofile
-
 
 # ==================== Signup API ====================
 @api_view(['POST'])
@@ -203,7 +278,6 @@ def signup_api(request):
     user = User.objects.create_user(username=username, email=email, password=password)
     login(request, user)
     return Response({"success": True, "user_id": user.id})
-
 
 # ==================== Login API ====================
 @api_view(['POST'])
@@ -227,3 +301,5 @@ def logout_api(request):
     from django.contrib.auth import logout
     logout(request)
     return Response({"success": True})
+
+

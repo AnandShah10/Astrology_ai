@@ -16,5 +16,5 @@ urlpatterns = [
     path('compatibility',views.compatibility,name='compatibility'),
     path('bazi',views.bazi_view,name='bazi'),
     path('panchang',views.panchang_view,name='panchang'),
-
+    path("tarot", views.tarot_page, name="tarot"),
 ]

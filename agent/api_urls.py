@@ -13,4 +13,6 @@ urlpatterns = [
     path('signup/', api_views.signup_api, name='api-signup'),
     path('login/', api_views.login_api, name='api-login'),
     path('logout/', api_views.logout_api, name='api-logout'),
+    path("tarot/draw-card/", api_views.draw_card, name="draw_card"),
+    path("tarot/three-card/", api_views.three_card_spread, name="three_card_spread"),
 ]

@@ -42,7 +42,7 @@ class TarotCard(models.Model):
     suit = models.CharField(max_length=50)
     meaning_upright = models.TextField()
     meaning_reversed = models.TextField()
-    image = models.ImageField(upload_to="tarot/")
+    image = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.name

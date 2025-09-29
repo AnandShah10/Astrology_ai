@@ -241,6 +241,9 @@ def bazi_view(request):
         })
     else:
         return render(request, "bazi_form.html")
+    
+def tarot_page(request):
+    return render(request, "tarot_page.html")
 
 @login_required
 def edit_profile(request):
