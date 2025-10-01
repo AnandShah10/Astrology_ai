@@ -2,15 +2,15 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework import generics
+from rest_framework import generics,status
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
 from .models import UserProfile,TarotCard
 from .serializers import UserProfileSerializer,PanchangSerializer
-from datetime import date,datetime
-import os,base64,json,io,random
-from google.generativeai import GenerativeModel, configure
-from dotenv import load_dotenv
+from datetime import date,datetime,timedelta
+import os,base64,io,random
+# from google.generativeai import GenerativeModel, configure
+# from dotenv import load_dotenv
 from .utils.kundali import get_kundali_chart
 from .utils.compatibility import compatibility_report
 from .utils.kundali_matching import perform_kundali_matching
@@ -20,10 +20,21 @@ from .utils.panchang import get_panchang
 from gtts import gTTS
 from faster_whisper import WhisperModel
 from .utils.tarot import get_ai_interpretation,load_cards
-load_cards()
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from openai import AzureOpenAI
+def get_permanent_token(user):
+    token = AccessToken.for_user(user)
+    # token.set_exp(lifetime=timedelta(days=365*100))  # 100 years
+    token["exp"] = datetime.now() + timedelta(days=365*100)
+    print(token.lifetime)
+    return str(token)
+
+# load_cards()
 whisperModel = WhisperModel("base")
 SYSTEM_PROMPT_TEMPLATE = (
-    "You are Astro AI, a specialized assistant dedicated exclusively to astrology. "
+    "You are Pathdarshak AI, a specialized assistant dedicated exclusively to astrology. "
     "Your role is to provide accurate, insightful, and engaging answers about horoscopes, "
     "zodiac signs, natal charts, planetary transits, astrological houses, aspects, "
     "synastry, and other astrology-related topics. Always respond in a mystical, cosmic tone. "
@@ -39,29 +50,38 @@ SYSTEM_PROMPT_TEMPLATE = (
     "Today's Date: {today}. "
     "Reply like a kind, insightful astrologer."
 )
-load_dotenv()
-AI_API_KEY = os.getenv('AI_API_KEY')
-configure(api_key=AI_API_KEY)
-MODEL = GenerativeModel("gemini-2.5-flash")
+# load_dotenv()
+# AI_API_KEY = os.getenv('AI_API_KEY')
+# configure(api_key=AI_API_KEY)
+# MODEL = GenerativeModel("gemini-2.5-flash")
 
+endpoint = os.getenv("ENDPOINT_URL", "https://jivihireopenai.openai.azure.com/")
+client = AzureOpenAI(
+        azure_endpoint=endpoint,
+        api_key=os.environ['OPENAI_API_KEY'],
+        api_version="2024-05-01-preview",
+    )
+    
 # ==================== Chat API ====================
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def chat_api(request):
-    print(request.body)
+    print(request.data)
     is_voice = False
     if 'audio' in request.FILES:
         is_voice = True
         audio_file = request.FILES['audio']
+        # print(audio_file)
         audio_content = audio_file.read()
         segments, info = whisperModel.transcribe(io.BytesIO(audio_content))
+        print(segments)
         try:
-                message = " ".join([seg.text.strip() for seg in segments])
+                message = " ".join(seg.text.strip() for seg in segments)
         except Exception as e:
-                return Response({"error": "Empty message"}, status=400)
+                return Response({"error": "Empty message"+e}, status=400)
     else:
-            data = json.loads(request.body)
-            message = data.get("message", "").strip()
+            message = request.data.get("message", "").strip()
     if not message:
         return Response({"error": "Empty message"}, status=400)
 
@@ -79,22 +99,27 @@ def chat_api(request):
     )
 
     chat_history = request.session.get("chat_history", [])
+
     if not chat_history:
-        chat_history = [{"role": "model", "parts": [{"text": system_prompt}]}]
+        chat_history = [{"role": "system", "content": system_prompt}]
 
-    chat_history.append({"role": "user", "parts": [{"text": message}]})
+    # Add user message
+    chat_history.append({"role": "user", "content": message})
 
-    # response = MODEL.generate_content(contents=chat_history[-20:])
-    # reply = response.text
-    chat = MODEL.start_chat(history=chat_history)        
-    user_message_part = {"role": "user", "parts": [{"text": message}]}
-    chat_history.append(user_message_part)        
-    response_stream = chat.send_message(user_message_part, stream=True)
-    reply = "".join(chunk.text for chunk in response_stream)
+    # Call OpenAI GPT model
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",  # or "gpt-4", "gpt-3.5-turbo"
+        messages=chat_history[-20:],  # last 20 messages
+        temperature=0.7
+    )
 
-    chat_history.append({"role": "model", "parts": [{"text": reply}]})
+    reply = response.choices[0].message.content.strip()
+
+    # Save in session
+    chat_history.append({"role": "assistant", "content": reply})
     request.session["chat_history"] = chat_history[-20:]
     request.session.modified = True
+
     audio_base64 = None
     if is_voice:
         audio_base64 = None
@@ -103,16 +128,47 @@ def chat_api(request):
         tts.write_to_fp(audio_buffer)
         audio_buffer.seek(0)
         audio_base64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
-            
+        # print(reply,audio_base64)
         return Response({
                 "reply": reply,
                 "audio": audio_base64 if is_voice else None
             })
     else:
         return Response({"reply": reply})
+    
+# ==================== Horoscope API ===================
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def horoscope_api(request):
+    sign = request.data.get("sign", "").capitalize()
+
+    if not sign:
+        return Response({"error": "Please provide a zodiac sign."}, status=400)
+
+    # Prompt for GPT
+    prompt = f"Give me today's horoscope for the zodiac sign {sign} in 3-4 sentences. Keep it positive and inspiring."
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an expert astrologer who gives daily horoscopes."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
+
+        horoscope = response.choices[0].message.content.strip()
+
+        return Response({
+            "sign": sign,
+            "horoscope": horoscope
+        })
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
 # ==================== Panchang API ====================
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])  # you can change to [IsAuthenticated] if login required
 def panchang_api(request):
@@ -151,7 +207,6 @@ def compatibility_api(request):
     result = compatibility_report(person1, person2)
     return Response({"text": result})
 
-
 # ==================== Kundali API ====================
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -175,7 +230,6 @@ def kundali_api(request):
     except KeyError:
         return Response({"error": "Missing parameters"}, status=400)
 
-
 # ==================== Kundali Matching API ====================
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -186,7 +240,6 @@ def kundali_matching_api(request):
         return Response({"error": "Missing persons"}, status=400)
     result = perform_kundali_matching(person1, person2)
     return Response(result)
-
 
 # ==================== Bazi API ====================
 @api_view(['POST'])
@@ -229,7 +282,6 @@ def draw_card(request):
         "interpretation": interpretation
     })
 
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def three_card_spread(request):
@@ -260,8 +312,29 @@ class UserProfileAPI(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user.userprofile
+    
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_profile_api(request):
+    lat,lon,tz = geocode_place_timezone(request.data.get('birth_place'))
+    serializer = UserProfileSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(user=request.user,birth_lat=lat,birth_lng=lon)  # ✅ link profile to logged-in user
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def update_profile_api(request):
+    user_profile = UserProfile.objects.get(user=request.user)  # retrieve profile for current user
+    serializer = UserProfileSerializer(user_profile, data=request.data)
+    if serializer.is_valid():
+        serializer.save()  # This will update the profile, saving changes to the existing model instance.
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # ==================== Signup API ====================
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup_api(request):
@@ -276,10 +349,13 @@ def signup_api(request):
         return Response({"error": "Username already exists"}, status=400)
 
     user = User.objects.create_user(username=username, email=email, password=password)
-    login(request, user)
-    return Response({"success": True, "user_id": user.id})
+    # tokens = get_tokens_for_user(user)
+    token = get_permanent_token(user)
+    # login(request, user)
+    return Response({"success": True, "user_id": user.id,"token":token})
 
 # ==================== Login API ====================
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_api(request):
@@ -288,18 +364,26 @@ def login_api(request):
 
     user = authenticate(username=username, password=password)
     if user is not None:
-        login(request, user)
-        return Response({"success": True, "user_id": user.id})
+        # login(request, user)
+        # tokens = get_tokens_for_user(user)
+        token = get_permanent_token(user)
+        return Response({"success": True, "user_id": user.id,"token":token})
     else:
         return Response({"error": "Invalid credentials"}, status=400)
 
-
 # ==================== Logout API ====================
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_api(request):
-    from django.contrib.auth import logout
-    logout(request)
-    return Response({"success": True})
+    try:
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response({"error": "Refresh token required"}, status=400)
 
+        token = RefreshToken(refresh_token)
+        token.blacklist()  # invalidate this token
 
+        return Response({"success": True, "message": "Logged out successfully"})
+    except Exception as e:
+        return Response({"error": str(e)}, status=400)

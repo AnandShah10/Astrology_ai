@@ -32,6 +32,9 @@
           <span>Email</span>
         </label>
         <small class="error-message"></small>
+        {% for error in form.email.errors %}
+            {{ error }}
+            {% endfor %}
       </div>
 
       <!-- Password -->
@@ -43,6 +46,9 @@
         </label>
         <i class="bi bi-eye password-toggle" data-target="id_password1"></i>
         <small class="error-message"></small>
+        {% for error in form.password1.errors %}
+            {{ error }}
+            {% endfor %}
       </div>
 
       <!-- Confirm Password -->
@@ -54,15 +60,21 @@
         </label>
         <i class="bi bi-eye password-toggle" data-target="id_password2"></i>
         <small class="error-message"></small>
+        {% for error in form.password2.errors %}
+            {{ error }}
+            {% endfor %}
       </div>
 
       <!-- Terms -->
       <div class="form-check mb-4">
-        <input type="checkbox" id="id_terms" class="form-check-input" required />
+        <input type="checkbox" id="id_terms" class="form-check-input" required name="terms"/>
         <label for="id_terms" class="form-check-label">
           I agree to the <a href="{% url 'terms' %}" target="_blank">Terms & Conditions</a>
         </label>
         <small class="error-message"></small>
+        {% for error in form.terms.errors %}
+            {{ error }}
+            {% endfor %}
       </div>
 
       <!-- Submit -->

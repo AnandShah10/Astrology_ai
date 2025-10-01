@@ -2,19 +2,19 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
+# from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login,logout
 from django.core.cache import cache
 
 from .models import UserProfile
-from google.generativeai import GenerativeModel, configure
+# from google.generativeai import GenerativeModel, configure
 import json
 import base64
 import os,io
 from .forms import CustomSignupForm,UserProfileForm
 from geopy.geocoders import Nominatim
-from tzwhere import tzwhere
+# from tzwhere import tzwhere
 from timezonefinderL import TimezoneFinder
 import pytz
 from dotenv import load_dotenv
@@ -29,11 +29,20 @@ from gtts import gTTS
 from faster_whisper import WhisperModel
 
 whisperModel = WhisperModel("base")
-AI_API_KEY = os.getenv('AI_API_KEY')
-configure(api_key=AI_API_KEY)
-MODEL = GenerativeModel("gemini-2.5-flash")
+# AI_API_KEY = os.getenv('AI_API_KEY')
+# configure(api_key=AI_API_KEY)
+# MODEL = GenerativeModel("gemini-2.5-flash")
+
+from openai import AzureOpenAI
+endpoint = os.getenv("ENDPOINT_URL", "https://jivihireopenai.openai.azure.com/")
+client = AzureOpenAI(
+        azure_endpoint=endpoint,
+        api_key=os.environ['OPENAI_API_KEY'],
+        api_version="2024-05-01-preview",
+    )
+
 SYSTEM_PROMPT_TEMPLATE = (
-    "You are Astro AI, a specialized assistant dedicated exclusively to astrology. "
+    "You are Pathdarshak AI, a specialized assistant dedicated exclusively to astrology. "
     "Your role is to provide accurate, insightful, and engaging answers about horoscopes, "
     "zodiac signs, natal charts, planetary transits, astrological houses, aspects, "
     "synastry, and other astrology-related topics. Always respond in a mystical, cosmic tone. "
@@ -110,21 +119,17 @@ def chat_api(request):
         # Get or initialize chat history
         chat_history = request.session.get("chat_history", [])
         if not chat_history:
-            chat_history = [{"role": "model", "parts": [{"text": system_prompt}]}]
+            chat_history = [{"role": "system", "content": system_prompt}]
 
-        chat_history.append({"role": "user", "parts": [{"text": message}]})
-
-        # response = MODEL.generate_content(contents=chat_history[-20:])  # Limit history to last 20 messages
-        
-        chat = MODEL.start_chat(history=chat_history)
-        response = chat.send_message(message, stream=True)
-        
-        reply = ""
-        for chunk in response:
-            reply += chunk.text
-        # reply = response.text
-
-        chat_history.append({"role": "model", "parts": [{"text": reply}]})
+        # Add user message
+        chat_history.append({"role": "user", "content": message})
+        response = client.chat.completions.create(
+            model="gpt-4o-mini", 
+            messages=chat_history[-20:],  
+            temperature=0.7
+        )
+        reply = response.choices[0].message.content.strip()
+        chat_history.append({"role": "assistant", "content": reply})
 
         # Store only the last 20 messages in session
         request.session["chat_history"] = chat_history[-20:]
@@ -200,7 +205,13 @@ def kundali(request):
         result = get_kundali_chart(year,month,day,hour,minute,lat,lon,offset_tz)
         return render(request,'kundali_result.html',result)
     else:
-        return render(request,'kundali_form.html')
+        if request.user.userprofile:
+            profile=request.user.userprofile
+            y,m,d = profile.birth_date.year,profile.birth_date.month,profile.birth_date.day
+            hour,minute,second = str(profile.birth_time).split(":")
+            place = profile.birth_place
+        else: y,m,d,hour,minute,second,place = "","","","","","",""
+        return render(request,'kundali_form.html',{"hour":hour,"year":y,"month":m,"day":d,"minute":minute,"second":second,"place":place})
 
 @csrf_exempt
 def compatibility(request):
@@ -240,7 +251,12 @@ def bazi_view(request):
             "element_percentages":element_percentages,
         })
     else:
-        return render(request, "bazi_form.html")
+        if request.user.userprofile:
+            profile=request.user.userprofile
+            y,m,d = profile.birth_date.year,profile.birth_date.month,profile.birth_date.day
+            hour = str(profile.birth_time).split(":")[0]
+        else: y,m,d,hour = "","","",""
+        return render(request, "bazi_form.html",{"hour":hour,"year":y,"month":m,"day":d})
     
 def tarot_page(request):
     return render(request, "tarot_page.html")
@@ -267,6 +283,7 @@ def edit_profile(request):
         return render(request, "profile_form.html", {"form": form})
 
 """For signing up user"""
+@csrf_exempt
 def signup(request):
     if request.method == "POST":
         form = CustomSignupForm(request.POST)

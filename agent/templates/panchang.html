@@ -182,4 +182,26 @@
     </div>
   </div>
 </div>
+<script>
+  const placeInput = document.getElementById('place')
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported by your browser");
+  }
+
+  navigator.geolocation.getCurrentPosition(async function(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    // Example using OpenStreetMap Nominatim API
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    const data = await res.json();
+    
+    // Full address
+    const address = data.display_name;
+    console.log("Full Address:", address);
+
+    // Populate place input
+    if(placeInput) placeInput.value = address;
+  })
+</script>
 {% endblock %}

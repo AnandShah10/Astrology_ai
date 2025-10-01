@@ -9,16 +9,16 @@
     {% csrf_token %}
     <div class="row g-3">
       <div class="col-md-3">
-        <input type="number" name="year" class="form-control bazi-input" placeholder="Year" required>
+        <input type="number" name="year" class="form-control bazi-input" placeholder="Year" required value="{{ year }}">
       </div>
       <div class="col-md-3">
-        <input type="number" name="month" class="form-control bazi-input" placeholder="Month" min="1" max="12" required>
+        <input type="number" name="month" class="form-control bazi-input" placeholder="Month" min="1" max="12" required value="{{ month }}"/>
       </div>
       <div class="col-md-3">
-        <input type="number" name="day" class="form-control bazi-input" placeholder="Day" min="1" max="31" required>
+        <input type="number" name="day" class="form-control bazi-input" placeholder="Day" min="1" max="31" required value="{{ day }}"/>
       </div>
       <div class="col-md-3">
-        <input type="number" name="hour" class="form-control bazi-input" placeholder="Hour (0-23)" min="0" max="23" required>
+        <input type="number" name="hour" class="form-control bazi-input" placeholder="Hour (0-23)" min="0" max="23" required value="{{ hour }}"/>
       </div>
     </div>
 

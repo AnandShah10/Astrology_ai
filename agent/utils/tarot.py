@@ -1,12 +1,19 @@
-from django.http import JsonResponse
-import google.generativeai as genai
-from dotenv import load_dotenv
-import os,random
+# import google.generativeai as genai
+# from dotenv import load_dotenv
+import os
 from .. import models
-load_dotenv()
-AI_API_KEY = os.getenv('AI_API_KEY')
-genai.configure(api_key=AI_API_KEY)
-model = genai.GenerativeModel("gemini-2.5-flash")
+# load_dotenv()
+# AI_API_KEY = os.getenv('AI_API_KEY')
+# genai.configure(api_key=AI_API_KEY)
+# model = genai.GenerativeModel("gemini-2.5-flash")
+
+from openai import AzureOpenAI
+endpoint = os.getenv("ENDPOINT_URL", "https://jivihireopenai.openai.azure.com/")
+client = AzureOpenAI(
+        azure_endpoint=endpoint,
+        api_key=os.environ['OPENAI_API_KEY'],
+        api_version="2024-05-01-preview",
+    )
 
 def get_ai_interpretation(spread, spread_type="3-card"):
     prompt = f"""
@@ -18,9 +25,14 @@ def get_ai_interpretation(spread, spread_type="3-card"):
     - Explain the story of Past, Present, Future.
     - Be clear, warm, and inspiring.
     """
-    response = model.generate_content(prompt)
-    return response.text.strip()
-
+    # response = model.generate_content(prompt)
+    # return response.text.strip()
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",  # or "gpt-4", "gpt-3.5-turbo"
+        messages= [{"role": "user", "content": prompt}],
+        temperature=0.7
+    )
+    return response.choices[0].message.content.strip()
 
 TAROT_CARDS = [
     # ---- Major Arcana (22) ----

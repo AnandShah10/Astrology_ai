@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-#qw8)eodbrwq1lynha*w!p%v(i-@qxggz5@!jb-%ea1e7_r$7d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['15.206.172.164','astro-ai.jmstech.co', 'www.astro-ai.jmstech.co','localhost','127.0.0.1']
+ALLOWED_HOSTS = ['15.206.172.164','astro-ai.jmstech.co', 'www.astro-ai.jmstech.co','localhost','127.0.0.1','c166be4709cc.ngrok-free.app ','*']
 
 
 # Application definition
@@ -38,8 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    "rest_framework_simplejwt.token_blacklist",
     'channels',
+    "django_apscheduler",
     'agent',
+    # 'content_agent',
 ]
 
 MIDDLEWARE = [
@@ -142,11 +145,13 @@ CHANNEL_LAYERS = {
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# APPEND_SLASH=False

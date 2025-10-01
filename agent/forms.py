@@ -9,8 +9,8 @@ class UserProfileForm(forms.ModelForm):
         fields = ["birth_date", "birth_time", "birth_place","gender", "system"]
         widgets = {
             "birth_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "birth_time": forms.TimeInput(attrs={"type": "time", "class": "form-control"}),
-            "birth_place": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., Mumbai, India"}),
+            "birth_time": forms.TimeInput(format='%H:%M:%S',attrs={"type": "time", "class": "form-control", "step": "1"}),
+            "birth_place": forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., Mumbai, India","name":"birth_place","list":"places-list"}),
             "gender":forms.Select(attrs={"class":"form-select"}),
             "system": forms.Select(attrs={"class": "form-select"}),
         }

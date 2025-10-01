@@ -1,11 +1,18 @@
-from django.http import JsonResponse
-import google.generativeai as genai
+# import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 load_dotenv()
-AI_API_KEY = os.getenv('AI_API_KEY')
-genai.configure(api_key=AI_API_KEY)
-model = genai.GenerativeModel("gemini-2.5-flash")
+# AI_API_KEY = os.getenv('AI_API_KEY')
+# genai.configure(api_key=AI_API_KEY)
+# model = genai.GenerativeModel("gemini-2.5-flash")
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+from openai import AzureOpenAI
+endpoint = os.getenv("ENDPOINT_URL", "https://jivihireopenai.openai.azure.com/")
+client = AzureOpenAI(
+        azure_endpoint=endpoint,
+        api_key=OPENAI_API_KEY,
+        api_version="2024-05-01-preview",
+    )
 
 def compatibility_report(person1,person2):
     # Build system prompt
@@ -34,8 +41,14 @@ def compatibility_report(person1,person2):
     End with an overall compatibility score (0-100%).
     """
     try:
-        response = model.generate_content(system_prompt)
-        return response.text
+        # response = model.generate_content(system_prompt)
+        # return response.text
+        response = client.chat.completions.create(
+        model="gpt-4o-mini",  # or "gpt-4", "gpt-3.5-turbo"
+        messages= [{"role": "user", "content": system_prompt}],
+        temperature=0.7
+        )
+        return response.choices[0].message.content.strip()
     except Exception as e:
         compatibility_report(person1,person2)
         

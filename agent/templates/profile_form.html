@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="profile-bg">
   <div class="astro-card p-4 p-md-5 rounded-4 text-center">
@@ -35,7 +34,10 @@
           <i class="bi bi-geo-alt"></i>
           {{ form.birth_place }}
           <span>Place of Birth</span>
+           <button type="button" class="btn-location bi bi-geo-alt-fill" onclick="getLocation()"></button>
+            
         </label>
+         <ul id="suggestions" class="suggestions-list"></ul>
       </div>
       
       <div class="form-group mb-4">
@@ -180,6 +182,79 @@
   box-shadow: 0 0 30px rgba(255, 193, 7, 0.6);
 }
 
+..suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 5px;
+  background: #ffffff;  /* Black background */
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  border-radius: 0.75rem;
+  max-height: 220px;
+  overflow-y: auto;
+  list-style-type: none;   /* removes bullets */
+  padding: 0;
+  z-index: 10000;
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.2);
+
+  /* Start hidden */
+  opacity: 0;
+  transform: translateY(-5px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* Show with fade+slide */
+.suggestions-list.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Each suggestion item */
+.suggestions-list li {
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #f5f5f5;  /* light text */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.2s, color 0.2s;
+  list-style-type: none; /* Explicitly remove bullets */
+}
+
+/* Hover effect */
+.suggestions-list li:hover {
+  background: linear-gradient(90deg, rgba(255,193,7,0.25), rgba(255,140,0,0.25));
+  color: #fff;
+}
+
+/* Last item no border */
+.suggestions-list li:last-child {
+  border-bottom: none;
+}
+
+/* Scrollbar styling */
+.suggestions-list::-webkit-scrollbar {
+  width: 6px;
+}
+.suggestions-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 193, 7, 0.5);
+  border-radius: 3px;
+}
+/* Location button */
+.btn-location {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: #FFC107;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
@@ -192,4 +267,89 @@
   .astro-card { padding: 2rem; }
 }
 </style>
+
+<script>
+const input = document.querySelector('[name="birth_place"]');
+const suggestions = document.getElementById("suggestions");
+
+// Autocomplete from Photon API
+input.addEventListener("input", function() {
+  const query = this.value.trim();
+    suggestions.innerHTML = "";
+    suggestions.classList.remove("active");
+    if (!query) return;
+    selectedIndex = -1;
+    if (input.value.length < 3) {
+        suggestions.innerHTML = "";
+        return;
+    }
+
+    fetch(`https://photon.komoot.io/api/?q=${input.value}&limit=5`)
+        .then(res => res.json())
+        .then(data => {
+            suggestions.innerHTML = "";
+            data.features.forEach(place => {
+                let city = place.properties.city || "";
+                let country = place.properties.country || "";
+                let name = place.properties.name || "";
+                place.display_name = `${name}${city ? ", " + city : ""}${country ? ", " + country : ""}`;
+
+                let li = document.createElement("li");
+                const regex = new RegExp(`(${query})`, "i");
+                li.innerHTML = place.display_name.replace(regex, "<strong>$1</strong>");
+
+                li.addEventListener("click", () => {
+                input.value = place.display_name;
+                suggestions.innerHTML = "";
+                suggestions.classList.remove("active");
+            });
+
+                suggestions.appendChild(li);
+            });
+            suggestions.classList.add("active"); /* Show suggestions */
+        });
+});
+
+// 📍 Use Current Location
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("Geolocation not supported");
+    }
+}
+
+function showPosition(position) {
+    let lat = position.coords.latitude;
+    let lon = position.coords.longitude;
+
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+        .then(res => res.json())
+        .then(data => {
+            input.value = data.display_name;
+            suggestions.innerHTML = "";
+            suggestions.classList.remove("active");
+        });
+}
+
+function showError(error) {
+    alert("Error fetching location: " + error.message);
+}
+function highlightItem(items) {
+    items.forEach((item, index) => {
+        item.classList.toggle("active", index === selectedIndex);
+    });
+}
+
+// Close suggestions when clicking outside
+document.addEventListener("click", function(e) {
+    if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+        suggestions.classList.remove("active");
+        suggestions.innerHTML = "";
+    }
+});
+
+</script>
+
+
 {% endblock %}

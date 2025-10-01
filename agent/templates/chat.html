@@ -243,7 +243,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const voiceBtn = document.getElementById("voice-btn");
   const micIcon = document.getElementById("voice-icon");
 
-  // Predefined Queries
+  // ================= Predefined Queries =================
   const predefinedQueries = {
     Daily: [
       "What does my horoscope say for today?",
@@ -286,7 +286,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Chat Submission (Text)
+  // ================= Chat Submission (Text) =================
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const message = input.value.trim();
@@ -294,7 +294,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     addMessage('user', message);
     input.value = "";
-
     addTypingIndicator();
 
     const response = await fetch("{% url 'chat_api' %}", {
@@ -315,70 +314,54 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // WebSocket for Voice
-  const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-  const wsPath = `${wsScheme}://${window.location.host}/ws/voice/`;
-  const ws = new WebSocket(wsPath);
-
-  let aiBubbleEl = null;
-  let transcriptEl = null;
-
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-
-    // Live transcript for user voice
-    if (data.transcript) {
-      if (!transcriptEl) {
-        transcriptEl = addMessage('user', '', true); // Placeholder for live transcript
-      }
-      transcriptEl.querySelector('.message-bubble').innerHTML = formatText(data.transcript);
-    }
-
-    // Partial AI reply
-    if (data.partial_reply) {
-      if (!aiBubbleEl) {
-        removeTypingIndicator();
-        aiBubbleEl = addMessage('ai', '', true); // Placeholder for streaming
-      }
-      aiBubbleEl.querySelector('.message-bubble').innerHTML += formatText(data.partial_reply);
-      scrollToBottom();
-    }
-
-    // Final AI reply
-    if (data.reply) {
-      removeTypingIndicator();
-      addMessage('ai', data.reply);
-    }
-
-    // Audio chunk
-    if (data.audio_chunk) {
-      playAudio(data.audio_chunk);
-    }
-  };
-
-  // Voice Recording
+  // ================= Voice Recording (Send to chat_api) =================
   let mediaRecorder;
+  let audioChunks = [];
+
   function startRecording() {
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
 
+      audioChunks = [];
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
-          ws.send(event.data);
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
         }
       };
 
-      mediaRecorder.start(250); // Send chunks every 250ms
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "recording.webm");
 
+        addTypingIndicator();
+
+        const response = await fetch("{% url 'chat_api' %}", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+          body: formData,
+        });
+
+        const data = await response.json();
+        removeTypingIndicator();
+        addMessage("ai", data.reply);
+
+        if (data.audio) {
+          playAudio(data.audio);
+        }
+      };
+
+      mediaRecorder.start();
       micIcon.classList.remove("bi-mic");
       micIcon.classList.add("bi-mic-fill");
       voiceBtn.classList.add("btn-danger");
-      addTypingIndicator(); // Show typing while processing voice
     }).catch(err => console.error("Microphone access denied", err));
   }
 
   function stopRecording() {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
       mediaRecorder.stop();
     }
     micIcon.classList.remove("bi-mic-fill");
@@ -391,14 +374,14 @@ document.addEventListener("DOMContentLoaded", function () {
   voiceBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startRecording(); });
   voiceBtn.addEventListener("touchend", (e) => { e.preventDefault(); stopRecording(); });
 
-  // Helper Functions
+  // ================= Helper Functions =================
   function addMessage(sender, message, placeholder = false) {
     const wrapper = document.createElement("div");
     wrapper.className = `d-flex mb-3 ${sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`;
 
     const avatar = document.createElement("img");
     avatar.className = "avatar";
-    avatar.src = sender === 'user' ? 'https://via.placeholder.com/32?text=U' : 'https://via.placeholder.com/32?text=AI'; // Online placeholders
+    avatar.src = sender === 'user' ? 'https://via.placeholder.com/32?text=U' : 'https://via.placeholder.com/32?text=AI';
     avatar.alt = sender === 'user' ? 'User' : 'AI';
 
     const bubble = document.createElement("div");
@@ -469,4 +452,5 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
+
 {% endblock %}
