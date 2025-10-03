@@ -3,12 +3,20 @@
 <div class="profile-bg">
   <div class="astro-card p-4 p-md-5 rounded-4 text-center">
     <div class="mb-4">
-      <h2 class="title">Enter / Update Your Birth Details</h2>
+      <h2 class="title">Your Birth Details</h2>
       <p class="subtitle">Your cosmic journey begins here ✨</p>
     </div>
 
     <form method="post" action="{% url 'save_profile' %}" class="text-start">
       {% csrf_token %}
+      <!-- Name -->
+      <div class="form-group mb-4">
+        <label class="floating-label">
+          <i class="bi bi-person"></i>
+          {{ form.name }}
+          <span>First Name</span>
+        </label>
+      </div>
 
       <!-- Birth Date -->
       <div class="form-group mb-4">
@@ -17,6 +25,9 @@
           {{ form.birth_date }}
           <span>Date of Birth</span>
         </label>
+        {% for error in form.birth_date.errors %}
+            {{ error }}
+            {% endfor %}
       </div>
 
       <!-- Birth Time -->
@@ -26,20 +37,37 @@
           {{ form.birth_time }}
           <span>Time of Birth</span>
         </label>
+        {% for error in form.birth_time.errors %}
+            {{ error }}
+            {% endfor %}
       </div>
 
       <!-- Birth Place -->
-      <div class="form-group mb-4">
+      <div class="form-group mb-4 position-relative">
         <label class="floating-label">
           <i class="bi bi-geo-alt"></i>
           {{ form.birth_place }}
           <span>Place of Birth</span>
-           <button type="button" class="btn-location bi bi-geo-alt-fill" onclick="getLocation()"></button>
-            
+          <!-- Loader -->
+          <div id="inputLoader" class="input-loader"></div>
+
+          <!-- Location button -->
+          <button type="button" class="btn-location bi bi-geo-alt-fill" onclick="getLocation()"></button>
+
+          <!-- Suggestions Dropdown -->
+          <div id="suggestions" class="dropdown-menu custom-dropdown"></div>
         </label>
-         <ul id="suggestions" class="suggestions-list"></ul>
+        {% for error in form.birth_place.errors %}
+            {{ error }}
+            {% endfor %}
+                  <p class="alert text-danger">{{ error }}</p>
+
+        <!-- Hidden fields for lat/lon -->
+        <input type="hidden" name="latitude" id="latitude">
+        <input type="hidden" name="longitude" id="longitude">
       </div>
       
+      <!-- Gender -->
       <div class="form-group mb-4">
         <label class="floating-label">
           <i class="bi bi-person"></i>
@@ -47,7 +75,6 @@
           <span>Gender</span>
         </label>
       </div>
-
 
       <!-- Astrology System -->
       <div class="form-group mb-4">
@@ -131,8 +158,8 @@
   transition: all 0.3s ease;
 }
 .floating-label select option {
-  background: #111;         /* Dark background for dropdown */
-  color: #fff;              /* White text for visibility */
+  background: #111;
+  color: #fff;
   padding: 0.5rem;
 }
 .floating-label span {
@@ -164,84 +191,81 @@
   border-radius: 4px;
 }
 
-/* Button */
-.btn-submit {
-  background: linear-gradient(90deg, #FFC107, #FF8C00);
-  color: #fff;
-  padding: 0.9rem 2.2rem;
-  border: none;
-  border-radius: 0.75rem;
-  font-size: 1.1rem;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
-}
-.btn-submit:hover {
-  transform: scale(1.05);
-  background: linear-gradient(90deg, #FF8C00, #FFC107);
-  box-shadow: 0 0 30px rgba(255, 193, 7, 0.6);
-}
-
-..suggestions-list {
+/* Dropdown */
+.custom-dropdown {
+  display: none;
   position: absolute;
   top: 100%;
-  left: 0;
+  left: 2.8rem;
   right: 0;
-  margin-top: 5px;
-  background: #ffffff;  /* Black background */
-  border: 1px solid rgba(255, 193, 7, 0.4);
-  border-radius: 0.75rem;
-  max-height: 220px;
+  z-index: 1050;
+  max-height: 200px;
   overflow-y: auto;
-  list-style-type: none;   /* removes bullets */
-  padding: 0;
-  z-index: 10000;
-  box-shadow: 0 0 15px rgba(255, 193, 7, 0.2);
-
-  /* Start hidden */
-  opacity: 0;
-  transform: translateY(-5px);
-  pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  background: #111;
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  border-radius: 0.5rem;
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
 }
-
-/* Show with fade+slide */
-.suggestions-list.active {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-/* Each suggestion item */
-.suggestions-list li {
-  padding: 0.8rem 1rem;
-  cursor: pointer;
+.custom-dropdown.show { display: block; animation: fadeIn 0.2s ease; }
+.custom-dropdown .dropdown-item {
+  padding: 0.7rem 1rem;
   font-size: 0.95rem;
-  color: #f5f5f5;  /* light text */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  transition: background 0.2s, color 0.2s;
-  list-style-type: none; /* Explicitly remove bullets */
+  color: #fff;
+  cursor: pointer;
 }
-
-/* Hover effect */
-.suggestions-list li:hover {
-  background: linear-gradient(90deg, rgba(255,193,7,0.25), rgba(255,140,0,0.25));
+.custom-dropdown .dropdown-item:hover,
+.custom-dropdown .dropdown-item.active {
+  background: linear-gradient(90deg, rgba(255,193,7,0.5), rgba(255,140,0,0.5));
   color: #fff;
 }
-
-/* Last item no border */
-.suggestions-list li:last-child {
-  border-bottom: none;
-}
-
-/* Scrollbar styling */
-.suggestions-list::-webkit-scrollbar {
+/* Thin + glowing scrollbar */
+.custom-dropdown::-webkit-scrollbar {
   width: 6px;
 }
-.suggestions-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 193, 7, 0.5);
-  border-radius: 3px;
+
+.custom-dropdown::-webkit-scrollbar-track {
+  background: transparent; /* invisible track */
 }
+
+.custom-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 193, 7, 0.4); /* soft golden */
+  border-radius: 10px;
+  transition: background 0.3s ease, opacity 0.3s ease;
+  opacity: 0; /* hidden by default */
+}
+
+.custom-dropdown:hover::-webkit-scrollbar-thumb,
+.custom-dropdown:active::-webkit-scrollbar-thumb {
+  opacity: 1; /* show on hover/scroll */
+  background: rgba(255, 193, 7, 0.8); /* brighter gold */
+}
+
+/* Firefox support */
+.custom-dropdown {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,193,7,0.6) transparent;
+}
+
+
+/* Loader */
+.input-loader {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 193, 7, 0.3);
+  border-top: 2px solid #FFC107;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+@keyframes spin {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}
+
 /* Location button */
 .btn-location {
   position: absolute;
@@ -266,49 +290,100 @@
   .title { font-size: 1.6rem; }
   .astro-card { padding: 2rem; }
 }
+.btn-submit { background: linear-gradient(90deg, #FFC107, #FF8C00); color: #fff; padding: 0.9rem 2.2rem; border: none; border-radius: 0.75rem; font-size: 1.1rem; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 0 20px rgba(255, 193, 7, 0.4); }
+ .btn-submit:hover { transform: scale(1.05); background: linear-gradient(90deg, #FF8C00, #FFC107); box-shadow: 0 0 30px rgba(255, 193, 7, 0.6); }
 </style>
 
 <script>
 const input = document.querySelector('[name="birth_place"]');
 const suggestions = document.getElementById("suggestions");
+const loader = document.getElementById("inputLoader");
+const latField = document.getElementById("latitude");
+const lonField = document.getElementById("longitude");
 
-// Autocomplete from Photon API
+let selectedIndex = -1;
+let debounceTimer = null;
+
+// Debounced search
 input.addEventListener("input", function() {
-  const query = this.value.trim();
-    suggestions.innerHTML = "";
-    suggestions.classList.remove("active");
-    if (!query) return;
-    selectedIndex = -1;
-    if (input.value.length < 3) {
-        suggestions.innerHTML = "";
-        return;
-    }
+    clearTimeout(debounceTimer);
+    const query = this.value.trim();
+    debounceTimer = setTimeout(() => fetchSuggestions(query), 300);
+});
 
-    fetch(`https://photon.komoot.io/api/?q=${input.value}&limit=5`)
+function fetchSuggestions(query) {
+    suggestions.innerHTML = "";
+    suggestions.classList.remove("show");
+    selectedIndex = -1;
+
+    if (!query || query.length < 3) return;
+
+    loader.style.display = "block";
+
+    fetch(`https://photon.komoot.io/api/?q=${query}&limit=6`)
         .then(res => res.json())
         .then(data => {
             suggestions.innerHTML = "";
-            data.features.forEach(place => {
+            data.features.forEach((place, index) => {
                 let city = place.properties.city || "";
                 let country = place.properties.country || "";
                 let name = place.properties.name || "";
-                place.display_name = `${name}${city ? ", " + city : ""}${country ? ", " + country : ""}`;
+                let display = `${name}${city ? ", " + city : ""}${country ? ", " + country : ""}`;
 
-                let li = document.createElement("li");
-                const regex = new RegExp(`(${query})`, "i");
-                li.innerHTML = place.display_name.replace(regex, "<strong>$1</strong>");
+                let option = document.createElement("div");
+                option.classList.add("dropdown-item");
+                option.innerHTML = display.replace(new RegExp(`(${query})`, "i"), "<strong>$1</strong>");
 
-                li.addEventListener("click", () => {
-                input.value = place.display_name;
-                suggestions.innerHTML = "";
-                suggestions.classList.remove("active");
+                option.addEventListener("click", () => {
+                    input.value = display;
+                    latField.value = place.geometry.coordinates[1];
+                    lonField.value = place.geometry.coordinates[0];
+                    suggestions.innerHTML = "";
+                    suggestions.classList.remove("show");
+                });
+
+                suggestions.appendChild(option);
             });
 
-                suggestions.appendChild(li);
-            });
-            suggestions.classList.add("active"); /* Show suggestions */
-        });
+            let items = suggestions.querySelectorAll(".dropdown-item");
+            if (items.length > 0) {
+                selectedIndex = 0;
+                updateHighlight(items);
+                suggestions.classList.add("show");
+            }
+        })
+        .finally(() => loader.style.display = "none");
+}
+
+// Keyboard navigation
+input.addEventListener("keydown", function(e) {
+    let items = suggestions.querySelectorAll(".dropdown-item");
+    if (!items.length) return;
+
+    if (e.key === "ArrowDown") {
+        e.preventDefault();
+        selectedIndex = (selectedIndex + 1) % items.length;
+        updateHighlight(items);
+    } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+        updateHighlight(items);
+    } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (selectedIndex >= 0 && items[selectedIndex]) {
+            items[selectedIndex].click();
+        }
+    } else if (e.key === "Escape") {
+        suggestions.classList.remove("show");
+    }
 });
+
+function updateHighlight(items) {
+    items.forEach((item, index) => {
+        item.classList.toggle("active", index === selectedIndex);
+        if (index === selectedIndex) item.scrollIntoView({ block: "nearest" });
+    });
+}
 
 // 📍 Use Current Location
 function getLocation() {
@@ -327,29 +402,23 @@ function showPosition(position) {
         .then(res => res.json())
         .then(data => {
             input.value = data.display_name;
+            latField.value = lat;
+            lonField.value = lon;
             suggestions.innerHTML = "";
-            suggestions.classList.remove("active");
+            suggestions.classList.remove("show");
         });
 }
 
 function showError(error) {
     alert("Error fetching location: " + error.message);
 }
-function highlightItem(items) {
-    items.forEach((item, index) => {
-        item.classList.toggle("active", index === selectedIndex);
-    });
-}
 
-// Close suggestions when clicking outside
+// Close dropdown when clicking outside
 document.addEventListener("click", function(e) {
     if (!input.contains(e.target) && !suggestions.contains(e.target)) {
-        suggestions.classList.remove("active");
-        suggestions.innerHTML = "";
+        suggestions.classList.remove("show");
+        selectedIndex = -1;
     }
 });
-
 </script>
-
-
 {% endblock %}

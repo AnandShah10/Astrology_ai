@@ -7,11 +7,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login,logout
 from django.core.cache import cache
 
-from .models import UserProfile
+from .models import UserProfile,TarotCard
 # from google.generativeai import GenerativeModel, configure
-import json
-import base64
-import os,io
+import json,random,base64,os,io
 from .forms import CustomSignupForm,UserProfileForm
 from geopy.geocoders import Nominatim
 # from tzwhere import tzwhere
@@ -24,6 +22,8 @@ from .utils.compatibility import compatibility_report
 from .utils.kundali_matching import perform_kundali_matching
 from .utils.chinese_zodiac import generate_bazi
 from .utils.panchang import get_panchang
+from .utils.tarot import get_ai_interpretation,load_cards
+
 load_dotenv()
 from gtts import gTTS
 from faster_whisper import WhisperModel
@@ -42,21 +42,44 @@ client = AzureOpenAI(
     )
 
 SYSTEM_PROMPT_TEMPLATE = (
-    "You are Pathdarshak AI, a specialized assistant dedicated exclusively to astrology. "
-    "Your role is to provide accurate, insightful, and engaging answers about horoscopes, "
-    "zodiac signs, natal charts, planetary transits, astrological houses, aspects, "
-    "synastry, and other astrology-related topics. Always respond in a mystical, cosmic tone. "
-    "- Only answer questions directly related to astrology. Examples: zodiac sign characteristics, "
-    "horoscope predictions, birth chart interpretations, planetary influences, or astrological compatibility. "
-    "- If a question is not related to astrology (e.g., programming, weather), respond with: "
-    '"I\'m Astro AI, your cosmic guide! Please ask about horoscopes, zodiac signs, natal charts, '
-    'or other astrology topics to explore the mysteries of the stars." '
-    "- If ambiguous, ask for clarification to stay within astrology. "
-    "- Keep responses concise, relevant, and aligned with astrological principles. "
-    "User's birth details: Date: {birth_date}, Time: {birth_time}, "
-    "Place: {birth_place}, Time Zone: {birth_tz}, System: {system}. "
-    "Today's Date: {today}. "
-    "Reply like a kind, insightful astrologer."
+    """You are Pathdarshak AI, a celestial guide and astrological mentor, offering profound insights into the mysteries of the cosmos. Your role is to provide accurate, insightful, and transformative answers about astrology, including but not limited to:
+
+- **Zodiac Sign Characteristics**: Delving into the essence of each sign and their energies.
+- **Horoscope Predictions**: Offering forecasts based on current planetary transits.
+- **Natal Chart Interpretations**: Analyzing birth charts to uncover life’s purpose and personal traits.
+- **Planetary Transits**: Exploring how planetary movements influence daily and long-term experiences.
+- **Astrological Houses and Aspects**: Understanding the deeper connections in a natal chart.
+- **Synastry and Compatibility**: Revealing the cosmic connections between individuals.
+- **Other Astrology Topics**: Engaging with all branches of astrology, including eclipses, retrogrades, and more.
+
+### Guidelines:
+1. **Focus on Astrology**: Always respond to questions within the realm of astrology. For example, share wisdom on zodiac signs, horoscope readings, birth chart insights, planetary influences, and astrological compatibility.
+   
+2. **Non-Astrological Topics**: If asked about topics unrelated to astrology(greetings excluded), reply with:  
+   _"Please ask about horoscopes, zodiac signs, natal charts, or other astrology topics to explore the mysteries of the stars."_
+
+3. **Ambiguity**: If a question is unclear or ambiguous, ask for clarification to maintain astrological relevance.
+
+4. **World Affairs**: When asked about world events, offer predictions based on astrological insights, such as the influence of planetary movements on global affairs.
+
+5. **Finance and Wealth**: Provide astrological insights into financial matters, offering accurate predictions based on astrological principles. However, include a note that:  
+   _"These insights should be taken with caution, as they may not be fully accurate. Always consult with a professional before making major financial decisions."_
+
+6. **Personalization**: Always tailor your answers to the user's unique astrological details. Your guidance should feel personal and attuned to the individual's cosmic energy. Their birth details are:
+
+   - **Name**: {name}
+   - **Birth Date**: {birth_date}
+   - **Birth Time**: {birth_time}
+   - **Birth Place**: {birth_place}
+   - **Time Zone**: {birth_tz}
+   - **Astrology System**: {system}
+   - **Today's Date**: {today}
+
+### Tone:
+- Your tone should be warm, nurturing, and mystical—like a wise celestial guide. Offer clarity and wisdom without over-explaining.
+- Keep responses brief, precise, and insightful, always speaking from the lens of astrology to illuminate the user's path.
+- Use {system} Astrology system to answer the questions.
+"""
 )
 
 def geocode_place_timezone(place_name: str):
@@ -113,9 +136,9 @@ def chat_api(request):
             birth_place=profile.birth_place,
             birth_tz=profile.birth_tz,
             system=profile.system,
-            today=date.today()
+            today=date.today(),
+            name=profile.name
         )
-
         # Get or initialize chat history
         chat_history = request.session.get("chat_history", [])
         if not chat_history:
@@ -123,6 +146,11 @@ def chat_api(request):
 
         # Add user message
         chat_history.append({"role": "user", "content": message})
+        
+        if len(chat_history)>20:
+            chat_history = chat_history[-20:]
+            chat_history.insert(0,{"role":"system","content":system_prompt})
+            
         response = client.chat.completions.create(
             model="gpt-4o-mini", 
             messages=chat_history[-20:],  
@@ -130,9 +158,9 @@ def chat_api(request):
         )
         reply = response.choices[0].message.content.strip()
         chat_history.append({"role": "assistant", "content": reply})
-
+        
         # Store only the last 20 messages in session
-        request.session["chat_history"] = chat_history[-20:]
+        request.session["chat_history"] = chat_history
         request.session.modified = True  # Ensure session is saved
         audio_base64 = None
         if is_voice:
@@ -170,6 +198,7 @@ def chat(request):
 def horoscope(request):
     return render(request,'horoscope.html')
 
+@csrf_exempt
 @login_required
 def panchang_view(request):
     result = None
@@ -189,6 +218,7 @@ def panchang_view(request):
         result = get_panchang(y, m, d, h, mi, lat, lon, offset_tz)
     return render(request, "panchang.html", {"result": result})
 
+@csrf_exempt
 @login_required
 def kundali(request):
     if request.method == "POST":
@@ -234,7 +264,8 @@ def kundali_matching(request):
         result = perform_kundali_matching(person1,person2)
         return JsonResponse(result)
     return render(request,'kundali_matching_form.html')
-    
+
+@csrf_exempt   
 def bazi_view(request):
     if request.method == "POST":
         year = int(request.POST.get("year"))
@@ -261,6 +292,43 @@ def bazi_view(request):
 def tarot_page(request):
     return render(request, "tarot_page.html")
 
+def draw_card(request):
+    card = random.choice(TarotCard.objects.all())
+    reversed_state = random.choice([True, False])
+    data = {
+        "name": card.name,
+        "suit": card.suit,
+        "orientation": "Reversed" if reversed_state else "Upright",
+        "meaning": card.meaning_reversed if reversed_state else card.meaning_upright,
+        "image": card.image
+    }
+    interpretation = get_ai_interpretation([data], spread_type="single card")
+    return JsonResponse({
+        "card": data,
+        "interpretation": interpretation
+    })
+
+def three_card_spread(request):
+    cards = random.sample(list(TarotCard.objects.all()), 3)
+    positions = ["Past", "Present", "Future"]
+    spread = []
+    for i, card in enumerate(cards):
+        reversed_state = random.choice([True, False])
+        spread.append({
+            "position": positions[i],
+            "name": card.name,
+            "suit": card.suit,
+            "orientation": "Reversed" if reversed_state else "Upright",
+            "meaning": card.meaning_reversed if reversed_state else card.meaning_upright,
+            "image": card.image
+        })
+    interpretation = get_ai_interpretation(spread, spread_type="3-card")
+    return JsonResponse({
+        "spread": spread,
+        "interpretation": interpretation
+    })
+
+@csrf_exempt
 @login_required
 def edit_profile(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
@@ -268,17 +336,23 @@ def edit_profile(request):
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
             profile = form.save(commit=False)
+            try:
             # Geocode the place into lat/lng
-            if profile.birth_place:
-                lat, lng, tz = geocode_place_timezone(profile.birth_place)
-                if lat and lng:
-                    profile.birth_lat = lat
-                    profile.birth_lng = lng
-                    profile.birth_tz = tz
-                form.save()
-            return redirect("home") # after saving, redirect to homepage
-
+                if profile.birth_place:
+                    lat, lng, tz = geocode_place_timezone(profile.birth_place)
+                    if lat and lng:
+                        profile.birth_lat = lat
+                        profile.birth_lng = lng
+                        profile.birth_tz = tz
+                    form.save()
+                return redirect("chat") # after saving, redirect to homepage
+            except Exception as e:
+                print(e)
+                return render(request, "profile_form.html", {"form": form,"error":"Invalid Birth Place"})
+        else:
+            return render(request, "profile_form.html", {"form": form})
     else:
+        profile.name = request.user.username
         form = UserProfileForm(instance=profile)
         return render(request, "profile_form.html", {"form": form})
 
@@ -299,13 +373,14 @@ def signup(request):
         return render(request,'signup.html',{"form":form})
 
 """For logging in user"""
+@csrf_exempt
 def loginUser(request):
     if request.method == "POST":
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request,user)
-            return redirect('home')
+            return redirect('chat')
         else:
             return redirect('login')
     else:
@@ -313,6 +388,7 @@ def loginUser(request):
         return render(request,'login.html',{"form":form})
 
 """For logging out user"""
+@csrf_exempt
 @login_required
 def logoutUser(request):
     logout(request)

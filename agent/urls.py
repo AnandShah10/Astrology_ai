@@ -17,4 +17,6 @@ urlpatterns = [
     path('bazi',views.bazi_view,name='bazi'),
     path('panchang',views.panchang_view,name='panchang'),
     path("tarot", views.tarot_page, name="tarot"),
+    path("tarot/draw-card/", views.draw_card, name="draw_card"),
+    path("tarot/three-card/", views.three_card_spread, name="three_card_spread"),
 ]

@@ -22,8 +22,9 @@ def get_ai_interpretation(spread, spread_type="3-card"):
     {spread}
     Please write a meaningful interpretation:
     - Connect the cards together (not just separate meanings).
-    - Explain the story of Past, Present, Future.
+    - Explain the story of Past, Present, Future (if spread is 3-card only else give Explaination for today).
     - Be clear, warm, and inspiring.
+    Give in a clear easy to read html format (without any links and images).Don't add 'html' in front of the response.Text should be white.
     """
     # response = model.generate_content(prompt)
     # return response.text.strip()
@@ -32,7 +33,8 @@ def get_ai_interpretation(spread, spread_type="3-card"):
         messages= [{"role": "user", "content": prompt}],
         temperature=0.7
     )
-    return response.choices[0].message.content.strip()
+    result = response.choices[0].message.content.strip()
+    return result
 
 TAROT_CARDS = [
     # ---- Major Arcana (22) ----

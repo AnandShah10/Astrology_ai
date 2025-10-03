@@ -19,6 +19,8 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     
+    name= models.CharField(max_length=50,default="")
+    
     gender = models.CharField(default='male',choices=[('male','Male'),('female','Female'),('other','Other')])
 
     # Astrology fields

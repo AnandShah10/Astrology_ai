@@ -276,7 +276,7 @@ function renderCard(card, position=null){
     const cardContainer = document.createElement("div");
     cardContainer.className = "card-container hidden";
 
-    const positionText = position ? `<span class="text-muted">${position}:</span> ` : "";
+    const positionText = position ? `<span class="text-light">${position}:</span> ` : "";
 
     cardContainer.innerHTML = `
         <div class="card-inner">
@@ -292,7 +292,7 @@ function renderCard(card, position=null){
     `;
 
     drawArea.appendChild(cardContainer);
-
+    deckEl.classList.add("d-none");
     // Click to flip
     cardContainer.addEventListener("click", ()=>{
         cardContainer.querySelector(".card-inner").classList.toggle("is-flipped");
@@ -328,7 +328,7 @@ async function fetchCards(url, spread=false){
 }
 
 // Button listeners
-document.getElementById("singleBtn").addEventListener("click", ()=>fetchCards("/api/tarot/draw-card/"));
-document.getElementById("threeBtn").addEventListener("click", ()=>fetchCards("/api/tarot/three-card/",true));
+document.getElementById("singleBtn").addEventListener("click", ()=>fetchCards("/tarot/draw-card/"));
+document.getElementById("threeBtn").addEventListener("click", ()=>fetchCards("/tarot/three-card/",true));
 </script>
 {% endblock %}
