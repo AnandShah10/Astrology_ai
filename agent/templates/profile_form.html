@@ -60,7 +60,9 @@
         {% for error in form.birth_place.errors %}
             {{ error }}
             {% endfor %}
-                  <p class="alert text-danger">{{ error }}</p>
+            {%if error%}
+                  <span class="alert text-danger">{{ error }}</span>
+            {%endif%}
 
         <!-- Hidden fields for lat/lon -->
         <input type="hidden" name="latitude" id="latitude">

@@ -17,7 +17,7 @@ from .utils.kundali_matching import perform_kundali_matching
 from .utils.chinese_zodiac import generate_bazi
 from .views import geocode_place_timezone
 from .utils.panchang import get_panchang
-from gtts import gTTS
+# from gtts import gTTS
 from faster_whisper import WhisperModel
 from .utils.tarot import get_ai_interpretation,load_cards
 from django.views.decorators.csrf import csrf_exempt
@@ -144,21 +144,22 @@ def chat_api(request):
     request.session["chat_history"] = chat_history[-20:]
     request.session.modified = True
 
-    audio_base64 = None
-    if is_voice:
-        audio_base64 = None
-        tts = gTTS(reply, lang="en")
-        audio_buffer = io.BytesIO()
-        tts.write_to_fp(audio_buffer)
-        audio_buffer.seek(0)
-        audio_base64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
-        # print(reply,audio_base64)
-        return Response({
-                "reply": reply,
-                "audio": audio_base64 if is_voice else None
-            })
-    else:
-        return Response({"reply": reply})
+    # audio_base64 = None
+    # if is_voice:
+    #     audio_base64 = None
+    #     tts = gTTS(reply, lang="en")
+    #     audio_buffer = io.BytesIO()
+    #     tts.write_to_fp(audio_buffer)
+    #     audio_buffer.seek(0)
+    #     audio_base64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
+    #     # print(reply,audio_base64)
+    #     return Response({
+    #             "reply": reply,
+    #             "audio": audio_base64 if is_voice else None
+    #         })
+    # else:
+    #     return Response({"reply": reply})
+    return Response({"reply": reply})
     
 # ==================== Horoscope API ===================
 @api_view(["POST"])

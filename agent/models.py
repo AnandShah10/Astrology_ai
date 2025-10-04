@@ -6,6 +6,8 @@ class UserProfile(models.Model):
         ("vedic", "Vedic Astrology"),
         ("western", "Western Astrology"),
         ("chinese", "Chinese Astrology"),
+        ("numerology","Numerology"),
+        ("korean","Korean Astrology"),
     ]
 
     TIMEZONE_CHOICES = [

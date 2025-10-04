@@ -3,10 +3,10 @@ import json, os, base64, asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from faster_whisper import WhisperModel
-from gtts import gTTS
+# from gtts import gTTS
 from io import BytesIO
 from pydub import AudioSegment
-from google.generativeai import GenerativeModel, configure
+# from google.generativeai import GenerativeModel, configure
 from dotenv import load_dotenv
 from datetime import date
 
@@ -14,10 +14,16 @@ load_dotenv()
 
 # Load Whisper once
 model = WhisperModel("small")  # tiny/small/medium/large
-AI_API_KEY = os.getenv("AI_API_KEY")
-configure(api_key=AI_API_KEY)
-MODEL = GenerativeModel("gemini-2.5-flash")
-
+# AI_API_KEY = os.getenv("AI_API_KEY")
+# configure(api_key=AI_API_KEY)
+# MODEL = GenerativeModel("gemini-2.5-flash")
+from openai import AzureOpenAI
+endpoint = os.getenv("ENDPOINT_URL", "https://jivihireopenai.openai.azure.com/")
+client = AzureOpenAI(
+        azure_endpoint=endpoint,
+        api_key=os.environ['OPENAI_API_KEY'],
+        api_version="2024-05-01-preview",
+    )
 SYSTEM_PROMPT_TEMPLATE = (
     "You are Astro AI, a specialized assistant dedicated exclusively to astrology. "
     "Your role is to provide accurate, insightful, and engaging answers about horoscopes, "
@@ -117,8 +123,14 @@ class VoiceConsumer(AsyncWebsocketConsumer):
 
         self.chat_history.append({"role": "user", "parts": [{"text": user_text}]})
 
-        chat = MODEL.start_chat(history=self.chat_history)
-        response = chat.send_message(user_text, stream=True)
+        # chat = MODEL.start_chat(history=self.chat_history)
+        # response = chat.send_message(user_text, stream=True)
+        response = client.chat.completions.create(
+            model="gpt-4o-mini", 
+            messages=self.chat_history[-20:],  
+            temperature=0.7
+        )
+        # reply = response.choices[0].message.content.strip()
 
         async def generator():
             reply_accum = ""
@@ -132,9 +144,10 @@ class VoiceConsumer(AsyncWebsocketConsumer):
         return generator()
 
     def get_tts_audio(self, text):
-        tts = gTTS(text=text, lang="en")
-        tts_buffer = BytesIO()
-        tts.write_to_fp(tts_buffer)
-        tts_buffer.seek(0)
-        audio_base64 = base64.b64encode(tts_buffer.read()).decode("utf-8")
-        return audio_base64
+        # tts = gTTS(text=text, lang="en")
+        # tts_buffer = BytesIO()
+        # tts.write_to_fp(tts_buffer)
+        # tts_buffer.seek(0)
+        # audio_base64 = base64.b64encode(tts_buffer.read()).decode("utf-8")
+        # return audio_base64
+        return None #change afterwards and uncomment the code

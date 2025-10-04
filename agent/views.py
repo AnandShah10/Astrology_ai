@@ -25,7 +25,7 @@ from .utils.panchang import get_panchang
 from .utils.tarot import get_ai_interpretation,load_cards
 
 load_dotenv()
-from gtts import gTTS
+# from gtts import gTTS
 from faster_whisper import WhisperModel
 
 whisperModel = WhisperModel("base")
@@ -162,21 +162,22 @@ def chat_api(request):
         # Store only the last 20 messages in session
         request.session["chat_history"] = chat_history
         request.session.modified = True  # Ensure session is saved
-        audio_base64 = None
-        if is_voice:
-            audio_base64 = None
-            tts = gTTS(reply, lang="en")
-            audio_buffer = io.BytesIO()
-            tts.write_to_fp(audio_buffer)
-            audio_buffer.seek(0)
-            audio_base64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
+        # audio_base64 = None
+        # if is_voice:
+        #     audio_base64 = None
+        #     tts = gTTS(reply, lang="en")
+        #     audio_buffer = io.BytesIO()
+        #     tts.write_to_fp(audio_buffer)
+        #     audio_buffer.seek(0)
+        #     audio_base64 = base64.b64encode(audio_buffer.read()).decode("utf-8")
             
-            return JsonResponse({
-                "reply": reply,
-                "audio": audio_base64 if is_voice else None
-            })
-        else:
-            return JsonResponse({"reply": reply})
+        #     return JsonResponse({
+        #         "reply": reply,
+        #         "audio": audio_base64 if is_voice else None
+        #     })
+        # else:
+        #     return JsonResponse({"reply": reply})
+        return JsonResponse({"reply": reply})
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
     except AttributeError:
