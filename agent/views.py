@@ -186,7 +186,30 @@ def chat_api(request):
 
 @login_required
 def home(request):
-    return render(request,"home.html")
+    profile = request.user.userprofile
+    user_data ={}
+    if profile:
+        y,m,d = profile.birth_date.year,profile.birth_date.month,profile.birth_date.day
+        hour,minute,second = str(profile.birth_time).split(":")
+        user_data = {
+            "birth_date":profile.birth_date,
+            "birth_time":profile.birth_time,
+            "birth_place":profile.birth_place,
+            "birth_tz":profile.birth_tz,
+            "system":profile.system,
+            "today":date.today(),
+            "name":profile.name,
+            'lat':profile.birth_lat,
+            "lon":profile.birth_lng,
+            "gender":profile.gender,
+            "year":y,
+            "month":m,
+            "day":d,
+            "hour":hour,
+            "minute":minute,
+            "second":second, 
+        }
+    return render(request,"home.html",user_data)
 
 def terms(request):
     return render(request,'terms.html')
@@ -209,7 +232,8 @@ def panchang_view(request):
         if request.POST.get('date'):
             date_str = datetime.strptime(request.POST.get('date'),"%Y-%m-%d")
             y,m,d = date_str.year,date_str.month,date_str.day
-        lat,lon,tz = geocode_place_timezone(str(request.POST.get('place',request.user.userprofile.birth_place)))
+        profile = request.user.userprofile
+        lat,lon,tz = geocode_place_timezone(str(request.POST.get('place',profile.birth_place)))
         now = datetime.now(tz)
         offset_tz = float(now.utcoffset().total_seconds() / 3600)
         h = datetime.now().hour
@@ -222,17 +246,20 @@ def panchang_view(request):
 @login_required
 def kundali(request):
     if request.method == "POST":
-        year = int(request.POST.get("year"))
-        month = int(request.POST.get("month"))
-        day = int(request.POST.get("day"))
-        hour = int(request.POST.get("hour"))
-        minute = int(request.POST.get("minute"))
-        second = int(request.POST.get('second'))
-        place = str(request.POST.get('place'))
-        lat,lon,tz = geocode_place_timezone(place)
-        now = datetime.now(tz)
-        offset_tz = float(now.utcoffset().total_seconds() / 3600)
-        result = get_kundali_chart(year,month,day,hour,minute,lat,lon,offset_tz)
+        try:
+            year = int(request.POST.get("year"))
+            month = int(request.POST.get("month"))
+            day = int(request.POST.get("day"))
+            hour = int(request.POST.get("hour"))
+            minute = int(request.POST.get("minute"))
+            second = int(request.POST.get('second'))
+            place = str(request.POST.get('place'))
+            lat,lon,tz = geocode_place_timezone(place)
+            now = datetime.now(tz)
+            offset_tz = float(now.utcoffset().total_seconds() / 3600)
+            result = get_kundali_chart(year,month,day,hour,minute,lat,lon,offset_tz)
+        except Exception as e:
+            return render(request,'kundali_result.html',{"error":"Unable to get kundali."})
         return render(request,'kundali_result.html',result)
     else:
         if request.user.userprofile:
@@ -253,7 +280,14 @@ def compatibility(request):
         data = {"text":result}
         return JsonResponse(data)
     else:
-        return render(request,'compatibility_form.html')
+        if request.user.userprofile:
+            profile=request.user.userprofile
+            name1= profile.name
+            time1= profile.birth_time.strftime("%H:%M:%S")
+            date1 = profile.birth_date.strftime("%Y-%m-%d")
+            place1 = profile.birth_place
+            
+        return render(request,'compatibility_form.html',{"name1":name1,"place1":place1,"time1":time1,"date1":date1})
 
 @csrf_exempt    
 def kundali_matching(request):
@@ -263,7 +297,14 @@ def kundali_matching(request):
         # res=compatibility_report(person1,person2)
         result = perform_kundali_matching(person1,person2)
         return JsonResponse(result)
-    return render(request,'kundali_matching_form.html')
+    else:
+        if request.user.userprofile:
+            profile=request.user.userprofile
+            name1= profile.name
+            time1= profile.birth_time.strftime("%H:%M:%S")
+            date1 = profile.birth_date.strftime("%Y-%m-%d")
+            place1 = profile.birth_place
+        return render(request,'kundali_matching_form.html',{"name1":name1,"place1":place1,"time1":time1,"date1":date1})
 
 @csrf_exempt   
 def bazi_view(request):

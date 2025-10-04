@@ -1,12 +1,12 @@
 channels==4.3.1
-Django==5.2.6
+Django==5.2.7
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 faster_whisper==1.2.0
 geopy==2.4.1
 gTTS==2.5.4
 matplotlib==3.10.6
-openai==2.0.0
+openai==2.1.0
 protobuf==6.32.1
 pydub==0.25.1
 pyswisseph==2.10.3.2
@@ -16,3 +16,5 @@ swisseph==0.0.0.dev1
 sxtwl==2.0.7
 timezonefinderL==4.0.2
 timezonefinderL==4.0.2
+django-cors-headers == 4.9.0
+django_apscheduler == 0.7.0

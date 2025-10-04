@@ -95,7 +95,13 @@
         <div class="card-body text-white">
           <h5 class="card-title fw-bold">🕉<span class="shimmer"> Daily Panchang</span></h5>
           <p class="card-text">Your daily Panchang guide for the perfect blend of tradition, timing, and cosmic energy.</p>
-          <a href="{% url 'panchang' %}" class="btn btn-light btn-sm mt-2">Get panchang</a>
+          {% comment %} <a href="{% url 'panchang' %}" class="btn btn-light btn-sm mt-2">Get panchang</a> {% endcomment %}
+          <form action="{% url 'panchang' %}" method="post" id="panchangForm"></form>
+          <input type="hidden" name="place" id="place"/>
+            <a href="#" onclick="document.getElementById('panchangForm').submit()" class="btn btn-light btn-sm mt-2">
+              Get Panchnag
+            </a>
+          </form>
         </div>
       </div>
     </div>
@@ -105,7 +111,20 @@
         <div class="card-body text-white">
           <h5 class="card-title fw-bold">📜<span class="shimmer">Kundli</span></h5>
           <p class="card-text">Discover your birth chart and its hidden messages.</p>
-          <a href="{% url 'kundali' %}" class="btn btn-light btn-sm mt-2">Get Kundali</a>
+          {% comment %} <a href="{% url 'kundali' %}" class="btn btn-light btn-sm mt-2">Get Kundali</a> {% endcomment %}
+          <form action="{% url 'kundali' %}" method="post">
+          {% csrf_token %}
+          <input type="number" name="year" value= "{{ year }}" hidden/>
+          <input type="number" name="month" value= "{{ month }}" hidden/>
+          <input type="number" name="day" value= "{{ day }}" hidden/>
+          <input type="number" name="hour" value= "{{ hour }}" hidden/>
+          <input type="number" name="minute" value= "{{ minute }}" hidden/>
+          <input type="number" name="second" value= "{{ second }}" hidden/>
+          <input type="text" name="place" value= "{{ birth_place }}" hidden/>
+            <button type="submit" class="btn btn-light btn-sm mt-2">
+              Get Kundali
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -135,7 +154,17 @@
         <div class="card-body text-white">
           <h5 class="card-title fw-bold">☯︎<span class="shimmer"> Chinese Zodiac</span></h5>
           <p class="card-text">Get your Chinese zodiac (Bazi) chart.</p>
-          <a href="{% url 'bazi' %}" class="btn btn-light btn-sm mt-2">Check Now</a>
+          {% comment %} <a href="{% url 'bazi' %}" class="btn btn-light btn-sm mt-2">Check Now</a> {% endcomment %}
+          <form action="{% url 'bazi' %}" method="post">
+          {% csrf_token %}
+          <input type="number" name="year" value= "{{ year }}" hidden/>
+          <input type="number" name="month" value= "{{ month }}" hidden/>
+          <input type="number" name="day" value= "{{ day }}" hidden/>
+          <input type="number" name="hour" value= "{{ hour }}" hidden/>
+            <button type="submit" class="btn btn-light btn-sm mt-2">
+              Check Now
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -158,4 +187,26 @@
     </div>
   {% endif %}
 </div>
+<script>
+  const placeInput = document.getElementById('place')
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported by your browser");
+  }
+
+  navigator.geolocation.getCurrentPosition(async function(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    // Example using OpenStreetMap Nominatim API
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    const data = await res.json();
+    
+    // Full address
+    const address = data.display_name;
+    console.log("Full Address:", address);
+
+    // Populate place input
+    if(placeInput) placeInput.value = address;
+  })
+</script>
 {% endblock %}
